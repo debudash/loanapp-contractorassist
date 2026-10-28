@@ -14,6 +14,14 @@ services:
     ports:
       - "4100:4100"
 
+  # The React app behind nginx, which proxies /api to the assistant service.
+  web:
+    build: { context: ./web, target: runtime }
+    depends_on: [api]
+    restart: unless-stopped
+    ports:
+      - "5180:80"
+
   # Typecheck, then unit tests. No API key needed.
   test:
     build: { context: ./server, target: dev }
@@ -23,6 +31,17 @@ services:
       - ./server/src:/app/src
       - ./server/test:/app/test
       - ./server/tsconfig.json:/app/tsconfig.json
+
+  # Typecheck, then component tests for the web app.
+  web-test:
+    build: { context: ./web, target: dev }
+    command: ["npm", "test"]
+    profiles: ["tools"]
+    volumes:
+      - ./web/src:/app/src
+      - ./web/test:/app/test
+      - ./web/tsconfig.json:/app/tsconfig.json
+      - ./web/vite.config.ts:/app/vite.config.ts
 
 volumes:
   audit-data:

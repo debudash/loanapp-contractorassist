@@ -96,6 +96,7 @@ describe("POST /api/offers", () => {
     expect(res.body).toEqual({
       noOffers: true,
       message: rules.fixedWording.noOffers,
+      offerSetId: expect.any(Number),
       cards: [],
       allOffers: [],
       totalCount: 0,

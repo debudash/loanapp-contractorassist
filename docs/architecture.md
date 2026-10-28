@@ -297,6 +297,6 @@ Built in vertical slices, test-first. Each slice is a GitLab merge request: buil
 | 3 | Decision engine mock, consent, audit store | `POST /sessions`, `/offers`, `/ballpark`, `GET /sessions/:id/audit` | Done (MR 2) |
 | 4 | AI steps: understand, explain, meaning check, retry and fallback | `assist()` with the model faked at the boundary | Done (MR 3) |
 | 5 | API wiring, rate limit, server and Docker runtime | `POST /api/assist`, `GET /health` | In progress |
-| 6 | React UI: inputs panel, cards, assistant panel, compliance view | Manual check plus a few component tests | |
+| 6 | React UI: inputs panel, ballpark, soft check, cards, assistant panel, compliance view | Component and App tests plus a browser smoke run | Done (MR 5) |
 | 7 | Evals against the real model | Eval suite | |
 | 8 | Docker run, README, design doc | `docker compose up` | |

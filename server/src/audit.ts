@@ -131,9 +131,15 @@ export class AuditStore {
     }
   }
 
-  /** The most recent soft check in the session: the offers on screen. */
+  /** The most recent soft check in the session. */
   latestOfferSet(sessionId: string): { id: number; budget?: number; offers: Offer[] } | undefined {
-    const set = this.one("SELECT id, budget FROM offer_set WHERE session_id = ? ORDER BY id DESC LIMIT 1", sessionId);
+    const set = this.one("SELECT id FROM offer_set WHERE session_id = ? ORDER BY id DESC LIMIT 1", sessionId);
+    return set ? this.offerSet(sessionId, set.id as number) : undefined;
+  }
+
+  /** One soft check in the session, or undefined if it isn't this session's. */
+  offerSet(sessionId: string, offerSetId: number): { id: number; budget?: number; offers: Offer[] } | undefined {
+    const set = this.one("SELECT id, budget FROM offer_set WHERE session_id = ? AND id = ?", sessionId, offerSetId);
     if (!set) return undefined;
     const offers = this.many("SELECT * FROM offer WHERE offer_set_id = ? ORDER BY id", set.id as number).map(toOffer);
     return { id: set.id as number, ...(set.budget !== null && { budget: set.budget as number }), offers };

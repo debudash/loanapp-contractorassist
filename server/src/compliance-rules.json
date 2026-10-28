@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-28.5",
+  "version": "2026-10-28.6",
   "phraseRules": [
     {
       "rule": "G-2",
@@ -55,5 +55,11 @@
     "creditDecisionAfterOffers": "The offers on screen are what the lender's check returned. Approval and rates come from the lender, so I can't say more about her credit.",
     "offTopic": "I can only help with the financing for this project. For tax, legal or other questions, she should ask the right professional.",
     "noOffers": "No offers came back from this check. The lender will send the homeowner a notice explaining why, and I can't say more about it."
+  },
+  "uiWording": {
+    "consent": "The homeowner has agreed to a soft credit check. It shows the offers the lender can make, if any.",
+    "ballparkFinePrint": "Estimates from {aprMin}%\u2013{aprMax}% APR across the fixed-rate products you offer. Her rate depends on a credit review; this is not an offer of credit. Promo offers appear only with real offers, with their full terms.",
+    "promoCliff": "Pay off {payoff} within {months} months and the built-up interest isn't charged. If not, {cliff} of deferred interest is added.",
+    "noBudgetHint": "No budget yet. Ask her: \"What monthly amount would feel comfortable?\""
   }
 }

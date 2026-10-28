@@ -145,3 +145,41 @@ describe("GET /health", () => {
     expect((await request(app).get("/health")).body).toEqual({ ok: true });
   });
 });
+
+describe("offers on screen", () => {
+  // Review fix (slice 6, spec S1): found by spec review; after the inputs changed, the assistant
+  // still answered about offers no longer shown.
+  it("explains only the offer set the screen says it shows; none after the inputs change", async () => {
+    const { app, model, sessionId } = await setup();
+    const offers = await request(app).post("/api/offers").set(asSummit)
+      .send({ sessionId, amount: 30_000, applicantRef: "moderate", consent: { given: true, textVersion: "v1" } });
+    model.understandings.push({ kind: "question" }, { kind: "question" });
+    model.drafts.push({ answer: "Here are the options.", say: "Here are the options." }, { answer: "Enter the amount first.", say: "" });
+    model.verdicts.push({ pass: true, quote: null, reason: null }, { pass: true, quote: null, reason: null });
+
+    await request(app).post("/api/assist").set(asSummit).send({ sessionId, message: "Compare them", offerSetId: offers.body.offerSetId });
+    await request(app).post("/api/assist").set(asSummit).send({ sessionId, message: "Compare them", offerSetId: null });
+
+    expect(model.explainRequests.map((r) => r.cards.length)).toEqual([3, 0]);
+  });
+
+  it("refuses an offer set from another session", async () => {
+    const { app, sessionId } = await setup();
+
+    const res = await request(app).post("/api/assist").set(asSummit).send({ sessionId, message: "Compare them", offerSetId: 999 });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: "offer_set_not_found" });
+  });
+});
+
+describe("GET /api/wording", () => {
+  // Review fix (slice 6, spec S3): found by spec review; consent and disclosure copy lived in the UI.
+  it("serves the compliance-owned wording the UI shows", async () => {
+    const { app } = await setup();
+
+    const res = await request(app).get("/api/wording").set(asSummit);
+
+    expect(res.body).toEqual({ version: rules.version, fixedWording: rules.fixedWording, uiWording: rules.uiWording });
+  });
+});
