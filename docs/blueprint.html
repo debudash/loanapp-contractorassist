@@ -1,0 +1,565 @@
+<title>Budget-First Financing Assistant</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,600;112,800&family=Figtree:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column of slide-sized sections; mock screens and diagrams break wider.
+   Palette and type follow the partner portal's public look (navy-purple ink, violet accent, warm off-white). */
+:root {
+  --bg: #f6f5f4;
+  --surface: #ffffff;
+  --ink: #200f51;
+  --muted: #5d5579;
+  --line: #e2dfe8;
+  --brand: #6c51e3;        /* violet: interactive and brand accent */
+  --brand-soft: #ece8fc;
+  --accent: #1f7a57;       /* semantic green: "fits", the guarantee */
+  --accent-soft: #e0f1e9;
+  --warn: #9a5b00;         /* "fits at some rates" */
+  --warn-soft: #fbecd6;
+  --crit: #b23a48;         /* cliff, blocked */
+  --crit-soft: #f8e1e4;
+  --code-bg: #f0eef4;
+  --font-display: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #130a32; --surface: #1c1244; --ink: #f1edff; --muted: #b0a7d0; --line: #33295e;
+    --brand: #a996ff; --brand-soft: #2b2063; --accent: #5fcf9f; --accent-soft: #163a31;
+    --warn: #f2b45a; --warn-soft: #3b2a12; --crit: #f08a98; --crit-soft: #401a2a;
+    --code-bg: #241a52; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #130a32; --surface: #1c1244; --ink: #f1edff; --muted: #b0a7d0; --line: #33295e;
+  --brand: #a996ff; --brand-soft: #2b2063; --accent: #5fcf9f; --accent-soft: #163a31;
+  --warn: #f2b45a; --warn-soft: #3b2a12; --crit: #f08a98; --crit-soft: #401a2a;
+  --code-bg: #241a52; color-scheme: dark;
+}
+
+body {
+  background: var(--bg); color: var(--ink);
+  font: 16px/1.6 var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 1040px; margin: 0 auto; padding-block: 48px 96px; display: grid; gap: 72px; }
+section { display: grid; gap: 20px; min-width: 0; }
+h1, h2, h3 { font-family: var(--font-display); font-stretch: 112%; text-wrap: balance; margin: 0; line-height: 1.12; }
+h1 { font-size: clamp(2.1rem, 5.2vw, 3.4rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.45rem, 3vw, 1.95rem); font-weight: 800; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+p { margin: 0; max-width: 65ch; }
+.eyebrow { font: 600 0.75rem/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand); }
+.lede { font-size: 1.15rem; color: var(--muted); }
+.muted { color: var(--muted); }
+code, .mono { font-family: var(--font-mono); font-size: 0.88em; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Hero */
+.hero { gap: 24px; padding-top: 16px; }
+.hero h1 q { quotes: "\201C" "\201D"; color: var(--brand); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 8px; }
+.fact { border-top: 2px solid var(--ink); padding-top: 10px; display: grid; gap: 2px; }
+.fact b { font: 700 1.9rem/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
+.fact span { color: var(--muted); font-size: 0.92rem; }
+
+/* Two-column people */
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.person { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 10px; align-content: start; }
+.person ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+.insight { border-left: 3px solid var(--brand); padding: 4px 0 4px 16px; max-width: 70ch; }
+
+/* Steps */
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; counter-reset: step; }
+.step { display: grid; gap: 6px; align-content: start; }
+.step::before { counter-increment: step; content: "Step " counter(step); font: 600 0.75rem/1 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.step h3 { font-size: 1.2rem; }
+
+/* Mock screen */
+.screen { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 18px; min-width: 0; }
+.screen-bar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+.screen-bar .inputs { display: flex; flex-wrap: wrap; gap: 8px; }
+.field { font: 500 0.9rem var(--font-mono); background: var(--code-bg); border-radius: 6px; padding: 4px 10px; }
+.field small { font-family: var(--font-body); color: var(--muted); margin-right: 6px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 600 0.75rem var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.chip { display: inline-block; font: 600 0.78rem/1 var(--font-body); padding: 5px 9px; border-radius: 999px; }
+.chip.ok { background: var(--accent-soft); color: var(--accent); }
+.chip.some { background: var(--warn-soft); color: var(--warn); }
+.chip.no { background: var(--code-bg); color: var(--muted); }
+.chip.crit { background: var(--crit-soft); color: var(--crit); }
+.fine { font-size: 0.8rem; color: var(--muted); max-width: 90ch; }
+
+.offers { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+.offer { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.offer header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.offer .label { font: 600 0.8rem var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; }
+.offer .pay { font: 700 2rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.offer .pay small { font: 400 0.95rem var(--font-body); color: var(--muted); }
+.offer dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 0; font-size: 0.86rem; }
+.offer dt { color: var(--muted); }
+.offer dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.cliff { background: var(--crit-soft); color: var(--ink); border-radius: 8px; padding: 10px 12px; font-size: 0.86rem; display: grid; gap: 4px; }
+.cliff b { color: var(--crit); }
+.see-all { font-size: 0.9rem; color: var(--brand); font-weight: 600; }
+
+.panel { border: 1px solid var(--brand); border-radius: 10px; padding: 16px; display: grid; gap: 10px; background: var(--bg); }
+.panel .q { font-weight: 600; }
+.panel .say { border-left: 3px solid var(--brand); padding-left: 12px; font-style: italic; }
+.panel-toggle { justify-self: start; font: 600 0.9rem var(--font-body); color: var(--brand); background: var(--brand-soft); border: 0; border-radius: 999px; padding: 8px 14px; cursor: pointer; }
+.panel-toggle:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* Guarantee: model text vs rendered */
+.versus { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.versus > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.ph { font-family: var(--font-mono); font-size: 0.86em; background: var(--accent-soft); color: var(--accent); border-radius: 4px; padding: 1px 4px; }
+.filled { background: var(--accent-soft); border-radius: 4px; padding: 0 3px; font-variant-numeric: tabular-nums; }
+
+/* Pipeline */
+.pipe { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stage { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 12px; display: grid; gap: 4px; align-content: start; position: relative; }
+.stage .kind { font: 600 0.7rem/1 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; }
+.stage.llm .kind { color: var(--warn); }
+.stage.code .kind { color: var(--accent); }
+.stage.human .kind { color: var(--muted); }
+.stage b { font-family: var(--font-display); font-weight: 500; font-size: 1.05rem; }
+.stage span { font-size: 0.85rem; color: var(--muted); }
+.lane-title { font: 600 0.85rem var(--font-body); color: var(--muted); }
+
+/* Architecture */
+.arch { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.tier { border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 8px; align-content: start; background: var(--surface); }
+.tier h3 { font-size: 1rem; }
+.tier ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; font-size: 0.9rem; }
+.tag { font: 600 0.68rem/1 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 6px; border-radius: 4px; background: var(--code-bg); color: var(--muted); }
+.tag.mock { background: var(--warn-soft); color: var(--warn); }
+.tag.real { background: var(--accent-soft); color: var(--accent); }
+.tag.local { background: var(--brand-soft); color: var(--brand); }
+.tag.none { background: var(--code-bg); color: var(--muted); }
+.status { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.status .tier p { font-size: 0.88rem; color: var(--muted); }
+
+pre { margin: 0; background: var(--code-bg); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font: 0.82rem/1.55 var(--font-mono); }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.two > * { min-width: 0; }
+.list-tight { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; max-width: 70ch; }
+.counter td:first-child { font-family: var(--font-mono); font-size: 0.85rem; }
+tr.flag td { background: var(--warn-soft); }
+footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--line); padding-top: 16px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<main>
+
+<section class="hero">
+  <span class="eyebrow">Solution blueprint · On-site Financing Assistant</span>
+  <h1><q>She can do $300 a month.</q><br>Can this roof fit that?</h1>
+  <p class="lede">That's how financing starts in a kitchen. Homeowners think in monthly budgets, not loan products. The assistant answers the budget question in 30 seconds, using numbers that only come from code and disclosures attached to every payment.</p>
+  <div class="facts">
+    <div class="fact"><b>38%</b><span>of applications abandoned, mostly at product selection</span></div>
+    <div class="fact"><b>22 min</b><span>average application, against a 10-minute benchmark</span></div>
+    <div class="fact"><b>30 s</b><span>what the contractor needs for a believable payment</span></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">The moment</span>
+  <h2>Two people, one tablet, one decision</h2>
+  <div class="pair">
+    <div class="person">
+      <h3>The contractor operates it</h3>
+      <ul>
+        <li>Sells roofs, not credit. Can't explain APR or deferred interest with confidence.</li>
+        <li>Has about 30 seconds before "let me think about it".</li>
+        <li>Needs a script they can say aloud, not a product sheet.</li>
+      </ul>
+    </div>
+    <div class="person">
+      <h3>The homeowner reads it</h3>
+      <ul>
+        <li>Facing a $30K expense they didn't plan for. Wary of being upsold.</li>
+        <li>Asks one question: what does this cost me each month?</li>
+        <li>Has heard "0% for 12 months" and doesn't know what happens in month 13.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="insight">The portal already returns real offers from a soft credit check in seconds. The process doesn't fail at underwriting. It fails in the conversation around the offers. So everything on screen is treated as borrower-facing.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Budget-first flow</span>
+  <h2>Start from what she can pay, then show what fits</h2>
+  <div class="steps">
+    <div class="step"><h3>Ballpark, no data</h3><p class="muted">Amount, project type, monthly budget. A payment range for each term across the contractor's products. Calculated in code, under a second, no AI call.</p></div>
+    <div class="step"><h3>Consent, then soft check</h3><p class="muted">One checkbox records the homeowner's consent. The decision engine (mocked) returns real offers. Credit doesn't change.</p></div>
+    <div class="step"><h3>Three offers, AI on request</h3><p class="muted">Lowest total cost, lowest monthly and promo, always in that order, each checked against her budget. The assistant panel opens only when the contractor asks for help.</p></div>
+  </div>
+
+  <div class="screen" aria-label="Example ballpark screen">
+    <div class="screen-bar">
+      <strong>Ballpark</strong>
+      <div class="inputs">
+        <span class="field"><small>Project</small>Roofing</span>
+        <span class="field"><small>Amount</small>$30,000</span>
+        <span class="field"><small>Budget</small>$300/mo</span>
+      </div>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Term</th><th>Monthly payment range</th><th>Against $300/mo</th></tr></thead>
+        <tbody>
+          <tr><td>5 years</td><td>$608 – $762</td><td><span class="chip no">Doesn't fit</span></td></tr>
+          <tr><td>10 years</td><td>$364 – $540</td><td><span class="chip no">Doesn't fit</span></td></tr>
+          <tr><td>15 years</td><td>$287 – $483</td><td><span class="chip some">Fits at some rates</span></td></tr>
+          <tr><td>20 years</td><td>$251 – $463</td><td><span class="chip some">Fits at some rates</span></td></tr>
+          <tr><td>25 years</td><td>$231 – $455</td><td><span class="chip some">Fits at some rates</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fine">Estimates from 7.99%–17.99% APR across the fixed-rate products this contractor offers. Promo offers appear only with real offers, with their full terms. Your rate depends on a credit review; this is not an offer of credit. Shows a range, never "as low as".</p>
+  </div>
+
+  <div class="screen" aria-label="Example offer cards with assistant panel">
+    <div class="screen-bar">
+      <strong>Offers for this homeowner</strong>
+      <span class="muted">Soft check · consent recorded 14:02 · no credit impact</span>
+    </div>
+    <div class="offers">
+      <article class="offer">
+        <header><span class="label">Lowest total cost</span><span class="chip no">Over by $79.86</span></header>
+        <div class="pay">$379.86<small> /mo</small></div>
+        <dl>
+          <dt>APR</dt><dd>8.99%</dd>
+          <dt>Term</dt><dd>10 yrs · 120 payments</dd>
+          <dt>Amount financed</dt><dd>$30,000.00</dd>
+          <dt>Finance charge</dt><dd>$15,583.80</dd>
+          <dt>Total of payments</dt><dd>$45,583.80</dd>
+        </dl>
+      </article>
+      <article class="offer">
+        <header><span class="label">Lowest monthly</span><span class="chip ok">Fits · $10.69 under</span></header>
+        <div class="pay">$289.31<small> /mo</small></div>
+        <dl>
+          <dt>APR</dt><dd>9.99%</dd>
+          <dt>Term</dt><dd>20 yrs · 240 payments</dd>
+          <dt>Amount financed</dt><dd>$30,000.00</dd>
+          <dt>Finance charge</dt><dd>$39,433.86</dd>
+          <dt>Total of payments</dt><dd>$69,433.86</dd>
+        </dl>
+      </article>
+      <article class="offer">
+        <header><span class="label">Promo · 12 mo deferred interest</span><span class="chip no">Over by $140.40</span></header>
+        <div class="pay">$440.40<small> /mo</small></div>
+        <dl>
+          <dt>APR</dt><dd>15.99%</dd>
+          <dt>Term</dt><dd>15 yrs · 180 payments</dd>
+          <dt>Amount financed</dt><dd>$30,000.00</dd>
+          <dt>Finance charge</dt><dd>$49,272.19</dd>
+          <dt>Total of payments</dt><dd>$79,272.19</dd>
+        </dl>
+        <div class="cliff">
+          <span>Pay off $30,000 within 12 months: <b>no interest.</b></span>
+          <span>If not paid off: <b>$4,759.61</b> of interest from month one is added in month 13.</span>
+        </div>
+      </article>
+    </div>
+    <span class="see-all">See all 5 offers</span>
+    <button class="panel-toggle" type="button" id="toggle" aria-expanded="true" aria-controls="assist">Hide assistant</button>
+    <div class="panel" id="assist">
+      <span class="q">Contractor: "Which one should she go with?"</span>
+      <p>I can't pick for her, but I can lay out the trade-off. The 20-year option is the only one under her $300 budget, at $289.31 a month. The 10-year option costs $90.55 more a month and saves $23,850.06 over the life of the loan. The promo only pays off if she can clear $30,000 within 12 months.</p>
+      <p class="say">Say it like this: "The 20-year plan is $289.31 a month at 9.99% APR, which is under your $300. The 10-year plan is $379.86 a month at 8.99% APR and costs about $24,000 less overall."</p>
+    </div>
+    <p class="fine">The spoken line names the APR and term with every payment it mentions. Cards always appear in the same order: lowest total cost, lowest monthly, promo. Labels describe what each offer is best at. Nothing is labelled "recommended". Offers come from the credit decision engine; the assistant explains them and decides nothing.</p>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">The one guarantee</span>
+  <h2>The model never writes a number</h2>
+  <p>The calculator produces every figure: payments, APR, totals, budget gaps, differences between offers and the promo cliff. The model writes the explanation with placeholders, and code fills them in. If the model's text contains any number it wasn't given, as a digit or spelled out, the answer is rejected. The talk-track line may round totals and differences ("about $24,000"), using a rounded figure code produces from the exact one. Monthly payment, APR and term are always exact. A wrong payment can't reach the homeowner because the model never wrote one.</p>
+  <div class="versus">
+    <div>
+      <span class="eyebrow">What the model writes</span>
+      <p>The <span class="ph">{{lowest_monthly.term_years}}</span>-year option is the only one under her budget, at <span class="ph">{{lowest_monthly.monthly}}</span>. The <span class="ph">{{lowest_total.term_years}}</span>-year option costs <span class="ph">{{diff.monthly}}</span> more a month and saves <span class="ph">{{diff.total}}</span> over the life of the loan.</p>
+    </div>
+    <div>
+      <span class="eyebrow">What the homeowner sees</span>
+      <p>The <span class="filled">20</span>-year option is the only one under her budget, at <span class="filled">$289.31</span>. The <span class="filled">10</span>-year option costs <span class="filled">$90.55</span> more a month and saves <span class="filled">$23,850.06</span> over the life of the loan.</p>
+    </div>
+  </div>
+  <p>The same rule works in the other direction when the contractor types a request. The model may copy a number the contractor typed and never invent one. Code checks that every extracted number appears in the original text before it fills a field, and the contractor confirms the fields before any quote runs.</p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Contractor typed</th><th>Model extracted</th><th>Input check (G-5)</th></tr></thead>
+      <tbody>
+        <tr><td>"$30K roof, she can do 300 a month"</td><td class="mono">amount: 30000, budget: 300, type: roofing</td><td><span class="chip ok">Both numbers found</span></td></tr>
+        <tr><td>"new roof, she wants it cheap"</td><td class="mono">amount: 25000, type: roofing</td><td><span class="chip crit">25000 not in text, field left empty</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">How a turn flows</span>
+  <h2>A fixed pipeline, not an agent</h2>
+  <p>Every turn takes the same path, so a free agent loop would only add failure modes and make the audit harder. There are two short lanes. Each box is one file.</p>
+  <p>The inputs panel is the only place numbers enter a quote. The AI can suggest inputs; only the contractor can apply them.</p>
+  <span class="lane-title">Lane 1 · contractor types new numbers in the chat</span>
+  <div class="pipe">
+    <div class="stage llm"><span class="kind">LLM · Haiku 5.5</span><b>Understand</b><span>New inputs or a question? Text to fields</span></div>
+    <div class="stage code"><span class="kind">Code</span><b>Input check</b><span>Every number must appear in the text (G-5)</span></div>
+    <div class="stage human"><span class="kind">Contractor</span><b>Apply</b><span>Suggested change shows in the inputs panel; one tap applies it</span></div>
+    <div class="stage code"><span class="kind">Code</span><b>Quote</b><span>Ballpark, budget fit, offers, cliff, disclosures</span></div>
+  </div>
+  <span class="lane-title">Lane 2 · contractor asks a question</span>
+  <div class="pipe">
+    <div class="stage code"><span class="kind">Code</span><b>Context</b><span>Offers on screen, placeholder list, last 4 turns</span></div>
+    <div class="stage llm"><span class="kind">LLM · Sonnet 5.5</span><b>Explain</b><span>Plain prose plus a "say it like this" line, placeholders only</span></div>
+    <div class="stage code"><span class="kind">Code + Haiku</span><b>Guard</b><span>Phrase list, then meaning check; one retry with the reason</span></div>
+    <div class="stage code"><span class="kind">Code</span><b>Render and audit</b><span>Fill placeholders, write the audit record</span></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Compliance</span>
+  <h2>Rules the compliance team can read and change</h2>
+  <p>Disclosure requirements, banned phrases and decision language live in one plain file. The renderer and the guard both read it, so compliance reviews rules, not prompts.</p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Check</th><th>Blocks</th><th>Example caught</th></tr></thead>
+      <tbody>
+        <tr><td>G-1 Number fidelity</td><td>Any digit not from a placeholder</td><td>"about $290 a month"</td></tr>
+        <tr><td>G-2 Decisions and picks</td><td>Saying she'll be approved, or which offer to choose</td><td>"she's a shoo-in", "go with the 20-year"</td></tr>
+        <tr><td>G-3 Marketing and pressure</td><td>"Free", "no interest" on deferred promos, "best deal", pushing past her budget</td><td>"it's basically interest-free", "if she can stretch"</td></tr>
+        <tr><td>G-4 Disclosures</td><td>A payment without APR, term, totals, conditions, on a card or in the spoken line</td><td>"$289 a month" with no APR or term</td></tr>
+        <tr><td>G-5 Input fidelity</td><td>Extracted numbers the contractor never typed</td><td>An invented loan amount</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Comparing offers against what she said is allowed: "under her $300 budget, only the 20-year fits". G-2 and G-3 are checked in three layers. A <strong>phrase list</strong> blocks the obvious wording instantly. A <strong>meaning check</strong> (Haiku, one yes/no question) catches rewordings the list misses. <strong>Evals</strong> with about 20 tricky rewordings measure what both still miss.</p>
+  <div class="two">
+    <div style="display:grid;gap:8px">
+      <h3>compliance-rules.json (excerpt)</h3>
+<pre>{
+  "version": "2026-10-28.1",
+  "payment_requires": ["apr", "term_months", "num_payments",
+    "amount_financed", "finance_charge", "total_of_payments"],
+  "promo_requires": ["promo_conditions", "cliff_amount"],
+  "decision_language": ["approved", "pre-approved",
+    "you'll qualify", "guaranteed", "your credit is good"],
+  "banned_marketing": ["free", "best deal", "cheapest",
+    { "term": "no interest", "when": "deferred_interest" }]
+}</pre>
+    </div>
+    <div style="display:grid;gap:8px">
+      <h3>One audit record per turn</h3>
+<pre>{
+  "turn_id": "t_0142", "contractor_id": "c_881",
+  "consent": { "soft_check": true, "at": "14:02:11" },
+  "question": "Which one should she go with?",
+  "offers_on_screen": ["o_10y_899", "o_20y_999", "o_promo"],
+  "catalog_version": "cat-2026-10", "rules_version": "2026-10-28.1",
+  "model": "claude-sonnet-5-5", "prompt_version": "explain@3",
+  "raw_text": "...at {{lowest_monthly.monthly}}...",
+  "guard": { "G1": "pass", "G2": "pass", "G3": "pass" },
+  "rendered_text": "...at $289.31...",
+  "attempts": 1
+}</pre>
+    </div>
+  </div>
+  <p class="muted">"Show me exactly what it said and why": the Compliance view in the app shows this record next to each answer.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Fit with the existing stack</span>
+  <h2>A panel in the portal and one small service</h2>
+  <div class="arch">
+    <div class="tier">
+      <h3>Partner portal <span class="tag">React</span></h3>
+      <ul><li>Ballpark form and offer cards</li><li>Assistant panel, closed by default</li><li>Compliance view toggle</li></ul>
+    </div>
+    <div class="tier">
+      <h3>Assistant service <span class="tag">Node · TS</span></h3>
+      <ul><li>Quote engine: amortization, fit, cliff, disclosures</li><li>Understand, explain, guard, render</li><li>Audit writer</li></ul>
+    </div>
+    <div class="tier">
+      <h3>Existing services <span class="tag mock">Mocked</span></h3>
+      <ul><li>Loan product catalog</li><li>Contractor profile (enrolled products)</li><li>Credit decision engine (soft check)</li></ul>
+    </div>
+    <div class="tier">
+      <h3>Anthropic API <span class="tag real">Real</span></h3>
+      <ul><li>Haiku 5.5: field extraction, fast and cheap</li><li>Sonnet 5.5: explanations, tone and instruction-following</li></ul>
+    </div>
+  </div>
+  <p>We build one new service and one panel. Everything else is something the company already runs.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Real, mocked or not built</span>
+  <h2>What the prototype actually runs</h2>
+  <p>Every mock sits behind the same interface as the real service it replaces, for example <code>LoanCatalog</code> with a <code>MockLoanCatalog</code>. Going to production means swapping the adapter. Nothing else changes.</p>
+  <div class="status">
+    <div class="tier">
+      <h3><span class="tag real">Real</span> Built and running</h3>
+      <ul>
+        <li>Anthropic API calls (Haiku 5.5, Sonnet 5.5)</li>
+        <li>Quote engine: amortization, budget fit, cliff, pick three</li>
+        <li>Disclosures, guard, placeholder rendering</li>
+        <li>Compliance rules file</li>
+        <li>Audit records and compliance view</li>
+        <li>Eval suite</li>
+        <li>React panel and offer cards</li>
+      </ul>
+    </div>
+    <div class="tier">
+      <h3><span class="tag mock">Mocked</span> Same interface, fixture data</h3>
+      <ul>
+        <li>Loan product catalog</li>
+        <li>Contractor profile</li>
+        <li>Credit decision engine (soft check, three fixture homeowners)</li>
+        <li>Zapier to JSM escalation (stub logs the ticket it would open)</li>
+      </ul>
+      <p>The brief says to mock financial APIs. These are the ones the flow needs.</p>
+    </div>
+    <div class="tier">
+      <h3><span class="tag local">Local stand-in</span> Same role, simpler tool</h3>
+      <ul>
+        <li>ECS Fargate → Docker Compose</li>
+        <li>RDS Postgres and S3 → append-only JSONL file</li>
+        <li>Secrets Manager → <code>.env</code> with one API key</li>
+      </ul>
+      <p>Runs on a laptop in under 5 minutes.</p>
+    </div>
+    <div class="tier">
+      <h3><span class="tag none">Not built</span> Design doc only</h3>
+      <ul>
+        <li>Plaid income verification</li>
+        <li>Document management and extraction</li>
+        <li>SQS event queue</li>
+        <li>Snowflake metrics</li>
+        <li>Teams quality digest</li>
+        <li>Submitting the application</li>
+      </ul>
+      <p>Not on the on-site quoting path, so they wait for later phases.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">AI design decisions</span>
+  <h2>Small context, no fine-tuning, no RAG in v1</h2>
+  <ul class="list-tight">
+    <li><strong>Prompting, not fine-tuning.</strong> The task is explanation over structured data that changes with the catalog. A fine-tuned model would bake in last quarter's rates.</li>
+    <li><strong>Context is tiny on purpose.</strong> The offers on screen, the placeholder list, compliance tone rules and the last four turns. Around 3K tokens, with no window to manage.</li>
+    <li><strong>No RAG in v1, on purpose.</strong> The catalog is structured data behind an API. You query it; you don't search it, however many products there are. The one piece of text the assistant needs, each product's plain-language terms approved by compliance, is stored with the product and looked up by ID. That's exact, where a similarity search could return the wrong product's terms.</li>
+    <li><strong>RAG doesn't fit a short build either.</strong> Doing it safely means choosing how to split documents, picking an embedding model, building a test set that proves the right passage comes back, handling empty or wrong results, and versioning the index for the audit trail. An untested retriever in front of borrower-facing answers is a liability. RAG belongs in phase 2, with time to test it, over policy FAQs, product terms documents, pay stubs and estimates.</li>
+    <li><strong>Cost has a ceiling.</strong> About 1.5¢ for a typical question and 3¢ at most: no agent loop, one retry, capped replies, a per-contractor rate limit. Ballpark and cards make no model call.</li>
+    <li><strong>Two models by job.</strong> Extraction needs speed and a strict schema; explanation needs judgment and tone. Both return strict JSON schemas (structured outputs), which keep the output shape fixed. Current models don't accept a temperature setting, so consistency comes from the schema and a low effort setting.</li>
+    <li><strong>Evals are tests.</strong> About 15 adversarial prompts ("tell her it's free", "780 score, she's good, right?") must be blocked or redirected, and a benign set catches over-blocking.</li>
+  </ul>
+</section>
+
+<section>
+  <span class="eyebrow">When it can't answer</span>
+  <h2>Each failure looks different on screen</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Situation</th><th>What the contractor sees</th></tr></thead>
+      <tbody>
+        <tr><td>Guard fails once</td><td>Nothing. One retry with the failure reason.</td></tr>
+        <tr><td>Guard fails twice</td><td>A fixed explanation written in code, labelled "standard explanation"</td></tr>
+        <tr><td>"Will she qualify?"</td><td>A redirect to the soft check: "Checking takes seconds and won't affect her credit."</td></tr>
+        <tr><td>No offers returned</td><td>"The lender will send the homeowner a notice." No speculation about why.</td></tr>
+        <tr><td>Model slow or down</td><td>"Assistant unavailable." Cards and numbers keep working.</td></tr>
+        <tr><td>$150K request</td><td>The $5K–$100K range, explained. No guessing.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Is it working</span>
+  <h2>Metrics, with one that catches overselling</h2>
+  <div class="scroll">
+    <table class="counter">
+      <thead><tr><th>Metric</th><th>Baseline</th><th>Target</th></tr></thead>
+      <tbody>
+        <tr><td>Time to first payment quote</td><td>Unknown, measure in pilot</td><td>≤ 30 s</td></tr>
+        <tr><td>Application completion time</td><td>22 min</td><td>&lt; 10 min</td></tr>
+        <tr><td>Overall abandonment</td><td>38%</td><td>≤ 30% in pilot</td></tr>
+        <tr><td>Pilot contractors using it weekly</td><td>0</td><td>≥ 50%</td></tr>
+        <tr><td>Numbers traceable to calculator (evals)</td><td>n/a</td><td>100%</td></tr>
+        <tr class="flag"><td>Deferred-interest promos that hit the cliff</td><td>From Snowflake</td><td>Must not rise</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Pushing 0% promos is the quickest way to cut abandonment. If closures and cliff hits rise together, the assistant is overselling, and that shows up here before it shows up in complaints.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Scope</span>
+  <h2>What ships now, and what waits</h2>
+  <div class="two">
+    <div class="person">
+      <h3>Prototype</h3>
+      <ul>
+        <li>Budget-first ballpark and three offer cards</li>
+        <li>Consent and mocked soft check, three fixture homeowners</li>
+        <li>Assistant panel with guard and placeholders</li>
+        <li>Audit log and compliance view</li>
+        <li>Eval suite as tests</li>
+      </ul>
+    </div>
+    <div class="person">
+      <h3>Later phases</h3>
+      <ul>
+        <li>Document extraction for pay stubs, estimates and scope letters</li>
+        <li>RAG over policy and product terms documents</li>
+        <li>Shareable homeowner summary to finish the decision at home</li>
+        <li>Fee transparency guard: cash price against amount financed</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Repository</span>
+  <h2>Every file explainable in a sentence</h2>
+<pre>server/src/
+  catalog.ts          mock product catalog and contractor profile
+  decisionEngine.ts   mock soft check, fixture homeowners
+  quote.ts            amortization, ballpark, budget fit, cliff, pick three
+  disclosures.ts      required fields for every payment shown (G-4)
+  understand.ts       Haiku: contractor text to fields
+  explain.ts          Sonnet: question to prose with placeholders
+  guard.ts            G-1 to G-5: phrase list and Haiku meaning check
+  rateLimit.ts        per-contractor question limits
+  render.ts           fill placeholders from calculator output
+  audit.ts            append-only audit log
+  compliance-rules.json
+server/test/          unit tests and the eval suite
+web/src/              BallparkForm, OfferCard, AssistantPanel, ComplianceView
+docs/                 PRD, design doc
+docker-compose.yml    web + api, one command to run</pre>
+</section>
+
+<footer>Example figures come from the prototype's amortization formula for a $30,000 roofing project. Offers and APRs are mock data, not real products.</footer>
+
+</main>
+
+<script>
+  const btn = document.getElementById('toggle');
+  const panel = document.getElementById('assist');
+  btn.addEventListener('click', () => {
+    panel.hidden = !panel.hidden;
+    btn.setAttribute('aria-expanded', String(!panel.hidden));
+    btn.textContent = panel.hidden ? 'Ask the assistant' : 'Hide assistant';
+  });
+</script>
