@@ -54,8 +54,8 @@ CREATE TABLE IF NOT EXISTS assistant_turn (
   outcome          TEXT NOT NULL CHECK (outcome IN
                      ('suggested', 'answered', 'standard_explanation', 'redirected', 'unavailable', 'rate_limited')),
   offers_on_screen TEXT NOT NULL,
-  model            TEXT,
-  prompt_version   TEXT,
+  models           TEXT,
+  prompt_versions  TEXT,
   rules_version    TEXT,
   raw_draft        TEXT,
   guard_result     TEXT,

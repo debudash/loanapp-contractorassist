@@ -77,7 +77,7 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
 - **FR-15** A "Compliance view" toggle shows that record for each turn.
 
 **Cost limits (apply to every flow that calls a model)**
-- **FR-16** Each question has a fixed cost ceiling: a fixed pipeline with no agent loop, at most one retry, capped response length, and only the last 4 turns sent. Worst case is about 3¢; typical is about 1.5¢.
+- **FR-16** Each question has a fixed cost ceiling: a fixed pipeline with no agent loop, at most five model calls (understand, then up to two explain-and-check rounds), capped output per call, no background retries, messages up to 500 characters, and only the last 4 answers about the same offers sent. One 20-second deadline covers the whole question and cancels any call still running. Typical cost is about 1¢; worst case about 5¢.
 - **FR-17** Each contractor gets a rate limit, for example 30 questions an hour and 200 a day. Ballpark and offer cards make no model call and aren't limited.
 - **FR-18** Token usage is logged in each audit record, so cost per contractor can be tracked. In production: cached repeat answers, an org-wide spending cap with alerts, and a Jira ticket raised on unusual spikes.
 
@@ -106,7 +106,7 @@ Each outcome is separate and visible to the contractor:
 - **F-1 Guard fails once:** regenerate once, passing the failure reason to the model.
 - **F-2 Guard fails twice:** show a fixed, code-written explanation of the card, labelled "standard explanation". This is logged.
 - **F-3 Out of scope (NG-1, NG-5):** a short redirect that offers the next step. Not shown as an error.
-- **F-4 LLM unavailable or slow (over 10 s):** the panel shows "Assistant unavailable"; the cards are unaffected.
+- **F-4 LLM unavailable or slow (no answer within 20 s):** the panel shows "Assistant unavailable"; the cards are unaffected. The turn is recorded with how far it got.
 - **F-5 No offers:** a neutral message per NG-2, and the panel won't speculate about the reason.
 - **F-6 Input outside catalog bounds** (for example $150K): the ballpark explains the $5K–$100K range. No guessing.
 
