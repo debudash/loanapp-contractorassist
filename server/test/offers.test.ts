@@ -1,15 +1,17 @@
 import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
 import { createApp } from "../src/app.js";
+import rules from "../src/compliance-rules.json" with { type: "json" };
 import { AuditStore } from "../src/audit.js";
 import { mockCatalog } from "../src/mocks/catalog.js";
 import { MockDecisionEngine } from "../src/mocks/decisionEngine.js";
+import { FakeModel } from "./fakeModel.js";
 
 function setup() {
   const audit = new AuditStore(":memory:");
   const engine = new MockDecisionEngine();
   const softCheck = vi.spyOn(engine, "softCheck");
-  const app = createApp({ catalog: mockCatalog, engine, audit });
+  const app = createApp({ catalog: mockCatalog, engine, audit, model: new FakeModel(), escalate: () => "JSM-STUB" });
   return { app, softCheck };
 }
 
@@ -93,7 +95,7 @@ describe("POST /api/offers", () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       noOffers: true,
-      message: "No offers came back from this check. The lender will send the homeowner a notice explaining why.",
+      message: rules.fixedWording.noOffers,
       cards: [],
       allOffers: [],
       totalCount: 0,

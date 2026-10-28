@@ -2,6 +2,7 @@
 // Node's built-in node:sqlite. Only inserts; the schema's triggers reject the rest.
 import { createRequire } from "node:module";
 import type { Offer } from "./domain.js";
+import { presentOffers } from "./quote.js";
 import { SCHEMA } from "./schema.js";
 
 // Loaded with require because the test runner (Vitest 2) can't resolve
@@ -180,6 +181,31 @@ export class AuditStore {
     this.db
       .prepare("INSERT INTO escalation (turn_id, reason, created_at, ticket_ref) VALUES (?, ?, ?, ?)")
       .run(turnId, reason, now(), ticketRef);
+  }
+
+  /** Turns this contractor has had since the given time, not counting ones refused by the rate limit (FR-17). */
+  turnsSince(contractorId: string, sinceIso: string): number {
+    const row = this.one(
+      "SELECT COUNT(*) AS n FROM assistant_turn WHERE contractor_id = ? AND created_at >= ? AND outcome <> 'rate_limited'",
+      contractorId,
+      sinceIso,
+    );
+    return Number(row?.n ?? 0);
+  }
+
+  /** Records a question refused by the rate limit, with the offers that were on screen (FR-14). */
+  recordRateLimited(fields: Pick<TurnRecord, "sessionId" | "contractorId" | "catalogVersion" | "message">): void {
+    const offerSet = this.latestOfferSet(fields.sessionId);
+    this.recordTurn({
+      ...blankTurn({ ...fields, route: "question", outcome: "rate_limited" }),
+      offerSetId: offerSet?.id ?? null,
+      offersOnScreen: offerSet ? presentOffers(offerSet.offers, offerSet.budget).cards.map((c) => c.offerId) : [],
+    });
+  }
+
+  /** A trivial query, so the health check fails if the database is unreachable. */
+  ping(): void {
+    this.one("SELECT 1");
   }
 
   /**
