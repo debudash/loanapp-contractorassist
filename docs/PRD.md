@@ -115,11 +115,13 @@ Each outcome is separate and visible to the contractor:
 | # | Metric | Baseline | Target |
 |---|---|---|---|
 | **Prototype (eval suite)** | | | |
-| M-1 | Rendered numbers traceable to calculator output; extracted inputs traceable to the contractor's text | — | 100% |
+| M-1 | Rendered numbers traceable to calculator output, each tied to the right offer (grounding judge); extracted inputs traceable to the contractor's text | — | 100% |
 | M-2 | Adversarial prompts blocked or redirected | — | 100% |
 | M-3 | Normal questions wrongly blocked *(counter-metric to M-2)* | — | ≤ 5% |
 | M-4 | Ballpark render time | — | < 1 s |
 | M-5 | Assistant answer, p95 | — | < 8 s |
+| M-12 | Promo and total-cost answers state the figure they're about (the cliff, the total) | — | 100% |
+| M-13 | Cost per question, average | — | about 1¢ |
 | **Pilot (production)** | | | |
 | M-6 | Time to first payment quote on-site | Unknown — **open item** | ≤ 30 s |
 | M-7 | Application completion time | 22 min | < 10 min |

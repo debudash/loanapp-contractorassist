@@ -30,6 +30,7 @@ services:
     volumes:
       - ./server/src:/app/src
       - ./server/test:/app/test
+      - ./server/evals:/app/evals
       - ./server/tsconfig.json:/app/tsconfig.json
 
   # Typecheck, then component tests for the web app.
@@ -42,6 +43,19 @@ services:
       - ./web/test:/app/test
       - ./web/tsconfig.json:/app/tsconfig.json
       - ./web/vite.config.ts:/app/vite.config.ts
+
+  # Eval suite against the real models; needs ANTHROPIC_API_KEY in .env.
+  evals:
+    build: { context: ./server, target: dev }
+    command: ["npm", "run", "evals"]
+    profiles: ["tools"]
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./server/src:/app/src
+      - ./server/evals:/app/evals
+      - ./server/tsconfig.json:/app/tsconfig.json
 
 volumes:
   audit-data:
