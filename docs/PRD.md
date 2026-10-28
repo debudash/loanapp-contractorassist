@@ -77,7 +77,7 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
 - **FR-15** A "Compliance view" toggle shows that record for each turn.
 
 **Cost limits (apply to every flow that calls a model)**
-- **FR-16** Each question has a fixed cost ceiling: a fixed pipeline with no agent loop, at most five model calls (understand, then up to two explain-and-check rounds), capped output per call, no background retries, messages up to 500 characters, and only the last 4 answers about the same offers sent. One 20-second deadline covers the whole question and cancels any call still running. Typical cost is about 1¢; worst case about 5¢.
+- **FR-16** Each question has a fixed cost ceiling: a fixed pipeline with no agent loop, at most five model calls (understand, then up to two explain-and-check rounds), capped output per call, no background retries, messages up to 500 characters, and only the last 4 answers about the same offers sent. One 20-second deadline covers the whole question and cancels any call still running. Typical cost is about 1¢; worst case about 6¢ (estimates).
 - **FR-17** Each contractor gets a rate limit, for example 30 questions an hour and 200 a day. Ballpark and offer cards make no model call and aren't limited.
 - **FR-18** Token usage is logged in each audit record, so cost per contractor can be tracked. In production: cached repeat answers, an org-wide spending cap with alerts, and a Jira ticket raised on unusual spikes.
 
