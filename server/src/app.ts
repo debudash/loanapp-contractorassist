@@ -97,7 +97,7 @@ export function createApp(deps: Deps) {
       res.status(502).json({ error: "soft_check_unavailable" });
       return;
     }
-    deps.audit.recordOfferSet(sessionId, consentId, {
+    const offerSetId = deps.audit.recordOfferSet(sessionId, consentId, {
       ...quote,
       applicantRef,
       catalogVersion: deps.catalog.version,
@@ -106,8 +106,8 @@ export function createApp(deps: Deps) {
 
     const presented = presentOffers(offers, quote.budget);
     res.json(offers.length === 0
-      ? { noOffers: true, message: rulesFile.fixedWording.noOffers, ...presented }
-      : { noOffers: false, ...presented });
+      ? { noOffers: true, message: rulesFile.fixedWording.noOffers, offerSetId, ...presented }
+      : { noOffers: false, offerSetId, ...presented });
   });
 
   // FR-17: questions per contractor, counting those still in flight so parallel requests can't slip past.
@@ -132,6 +132,12 @@ export function createApp(deps: Deps) {
       res.status(400).json({ error: "message_too_long", max: MAX_MESSAGE_LENGTH });
       return;
     }
+    // The offer set the screen shows: null once the inputs have changed. Must belong to this session.
+    const offerSetId = req.body?.offerSetId;
+    if (offerSetId !== undefined && offerSetId !== null && !deps.audit.offerSet(sessionId, Number(offerSetId))) {
+      res.status(400).json({ error: "offer_set_not_found" });
+      return;
+    }
     const contractorId: string = res.locals.contractorId;
     if (rateLimited(contractorId)) {
       deps.audit.recordRateLimited({ sessionId, contractorId, catalogVersion: deps.catalog.version, message });
@@ -140,10 +146,16 @@ export function createApp(deps: Deps) {
     }
     inFlight.set(contractorId, (inFlight.get(contractorId) ?? 0) + 1);
     try {
-      res.json(await assist({ sessionId, contractorId, message }, deps));
+      const onScreen = offerSetId === undefined ? undefined : offerSetId === null ? null : Number(offerSetId);
+      res.json(await assist({ sessionId, contractorId, message, offerSetId: onScreen }, deps));
     } finally {
       inFlight.set(contractorId, inFlight.get(contractorId)! - 1);
     }
+  });
+
+  // The compliance-owned wording the UI shows, so no compliance copy lives in the UI.
+  api.get("/wording", (_req, res) => {
+    res.json({ version: rulesFile.version, fixedWording: rulesFile.fixedWording, uiWording: rulesFile.uiWording });
   });
 
   // FR-15: everything recorded for a session. Reading never creates anything.

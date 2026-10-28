@@ -41,14 +41,20 @@ const MAX_ATTEMPTS = 2;
 const DEADLINE_MS = 20_000;
 
 export async function assist(
-  request: { sessionId: string; contractorId: string; message: string },
+  request: {
+    sessionId: string;
+    contractorId: string;
+    message: string;
+    /** The offer set on screen; null when none is shown; omitted means the latest. */
+    offerSetId?: number | null;
+  },
   deps: AssistDeps,
 ): Promise<AssistResult> {
   const started = Date.now();
   const usage: Usage = { inputTokens: 0, outputTokens: 0 };
   const deadline = new AbortController();
   const timer = setTimeout(() => deadline.abort(), deps.deadlineMs ?? DEADLINE_MS);
-  const screen = currentScreen(request.sessionId, request.contractorId, deps);
+  const screen = currentScreen(request.sessionId, request.contractorId, request.offerSetId, deps);
   const attempts: Attempt[] = [];
   const stepsRun = new Set<Step>();
   let route: TurnRecord["route"] = "question";
@@ -65,7 +71,8 @@ export async function assist(
   // Every turn records the same context; callers add only what happened.
   const record = (outcome: TurnRecord["outcome"], fields: Partial<TurnRecord> = {}) =>
     deps.audit.recordTurn({
-      ...blankTurn({ ...request, catalogVersion: deps.catalog.version, route, outcome }),
+      ...blankTurn({ sessionId: request.sessionId, contractorId: request.contractorId, message: request.message,
+                     catalogVersion: deps.catalog.version, route, outcome }),
       offerSetId: screen.offerSetId,
       offersOnScreen: screen.cards.map((c) => c.offerId),
       models: onlyStepsRun(deps.model.names),
@@ -157,8 +164,9 @@ function retryReasons(attempt: Attempt): string[] {
 }
 
 /** What is on screen for this session: the cards from the latest soft check, their figures and terms text. */
-function currentScreen(sessionId: string, contractorId: string, deps: AssistDeps) {
-  const offerSet = deps.audit.latestOfferSet(sessionId);
+function currentScreen(sessionId: string, contractorId: string, offerSetId: number | null | undefined, deps: AssistDeps) {
+  const offerSet =
+    offerSetId === null ? undefined : offerSetId === undefined ? deps.audit.latestOfferSet(sessionId) : deps.audit.offerSet(sessionId, offerSetId);
   const cards = offerSet ? presentOffers(offerSet.offers, offerSet.budget).cards : [];
   const products = deps.catalog.productsFor(contractorId);
   const kinds = new Set(cards.length ? cards.map((c) => c.kind) : products.map((p) => p.kind));
