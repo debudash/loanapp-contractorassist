@@ -1,2 +1,6 @@
 # Source material (brief, take-home PDF transcription) stays local
 docs/source/
+
+# Dependencies and build output live in containers
+node_modules/
+dist/

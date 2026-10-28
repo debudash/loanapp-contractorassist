@@ -1,0 +1,8 @@
+services:
+  # Typecheck, then unit tests. No API key needed.
+  test:
+    build: ./server
+    command: ["npm", "test"]
+    volumes:
+      - ./server/src:/app/src
+      - ./server/test:/app/test

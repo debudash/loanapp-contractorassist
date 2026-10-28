@@ -31,9 +31,9 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
 **Offers**
 - **FR-4** The soft-check button stays disabled until a consent box is ticked. The audit log records consent with a timestamp and the contractor's ID.
 - **FR-5** The mocked engine returns an offer set chosen by a fixture homeowner (strong, moderate, no offers).
-- **FR-6** Show at most 3 offer cards, chosen by a fixed rule: **Lowest monthly**, **Lowest total cost** and **Promo** (if any; otherwise the next lowest total cost). Each card is labelled by what it's best at and never as "recommended". The cards always appear in the same order, **Lowest total cost, Lowest monthly, Promo**, with no visual emphasis except the homeowner's own budget label (FR-8). Order is itself a nudge, so it's fixed and documented. A "See all N offers" link always shows the full set.
-- **FR-7** Every card displays the monthly payment, APR, term, number of payments, amount financed, finance charge and total of payments. A promo card adds the conditions, plus a **cliff line**: what is owed if the promo balance isn't paid off in time.
-- **FR-8** Given a budget, each offer card shows *fits budget* or *over by $X*. Budget is optional. Without one, the cards leave out the fit labels, and the assistant suggests the contractor ask: "What monthly amount would feel comfortable?" "As low as possible" is never treated as a budget, because that would push the longest, most expensive term.
+- **FR-6** Show at most 3 offer cards, chosen by a fixed rule: **Lowest monthly**, **Lowest total cost** and **Promo** (if any; otherwise the next lowest total cost). Each card is labelled by what it's best at and never as "recommended". The cards always appear in the same order, **Lowest total cost, Lowest monthly, Promo**, with no visual emphasis except the homeowner's own budget label (FR-8). Order is itself a nudge, so it's fixed and documented. Labels must always be true: if one offer has both the lowest total cost and the lowest monthly payment, its card says so ("Lowest total and monthly"), and the free slot goes to the next lowest total cost. Promos compete only for the promo slot, never for lowest monthly. A "See all N offers" link always shows the full set, with the same disclosures.
+- **FR-7** Every card displays the monthly payment, APR, term, number of payments, amount financed, finance charge and total of payments. A promo card adds the conditions (pay off the amount financed within the promo months), plus a **cliff line**: the deferred interest that is added if the balance isn't paid off in time.
+- **FR-8** Given a budget, each offer card shows *fits budget* (and by how much it's under) or *over by $X*. Budget is optional. Without one, the cards leave out the fit labels, and the assistant suggests the contractor ask: "What monthly amount would feel comfortable?" "As low as possible" is never treated as a budget, because that would push the longest, most expensive term.
 
 **AI assistant**
 - **FR-9** The panel is closed by default and opened by a button. Closing it never changes the cards.
@@ -49,7 +49,9 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
   - a spelled-out number ("twenty-four thousand")
   - a placeholder that doesn't match an offer on screen
 
-  The calculator exposes each figure in exact form. **Only totals and differences** also get a rounded form for the "say it like this" line (`{{diff.total.rounded}}` → "about $24,000"). Monthly payment, APR, term and number of payments are always exact. A what-if with no matching figure goes back through the calculator; the model never estimates it.
+  Placeholder names follow the card label, and each label appears once per screen. Which names exist depends on the offers (for example, `diff.*` only exists when lowest total and lowest monthly are different cards), so the explain prompt is given the list of names that exist for this screen, never a fixed list.
+
+  The calculator exposes each figure in exact form. **Only lifetime totals of $1,000 or more** (total of payments, finance charge, and the difference in total cost) also get a rounded form for the "say it like this" line (`{{diff.total.rounded}}` → "about $24,000"). Monthly payment, APR, term, number of payments and the promo cliff are always exact; no rounded form of them exists. A what-if with no matching figure goes back through the calculator; the model never estimates it.
 - **G-2** *No credit decisions, no recommendations:* the assistant may compare offers against what the homeowner said ("under her $300 budget, only the 20-year fits"). It may never say she'll be approved, or which offer she should pick.
 - **G-3** *No misleading marketing or pressure:* no "free", no "no interest" on a deferred-interest product, no "best deal", no pushing her past her own budget ("stretch to").
 - **G-2 and G-3 are checked in three layers:**
@@ -148,3 +150,5 @@ An untested retriever in front of borrower-facing answers is a liability, not a 
 - **A-3** Reg Z triggering terms for advertising (§1026.24(d)) are used as the disclosure standard for every quoted payment.
 - **A-4** Contractor identity and authentication are handled upstream by the portal.
 - **A-5** The pilot targets M-8 to M-10 are proposals to set with the stakeholders, not commitments the brief makes.
+- **A-6** *Promo cliff:* during the promo no interest is charged, so each payment reduces principal. Interest still builds on that falling principal and is all added if the balance isn't cleared in time. The brief doesn't define this; it's our model.
+- **A-7** *Total of payments* is the rounded monthly payment × number of payments, ignoring the small final-payment adjustment real loans make.

@@ -1,0 +1,13 @@
+{
+  "name": "assistant-server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "tsc --noEmit && vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "typescript": "5.6.3",
+    "vitest": "2.1.8"
+  }
+}
