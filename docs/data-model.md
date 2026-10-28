@@ -84,12 +84,12 @@ erDiagram
     text route "inputs | question"
     text outcome "suggested | answered | standard_explanation | redirected | unavailable | rate_limited"
     text offers_on_screen "JSON list of offer ids"
-    text model
-    text prompt_version
+    text models "JSON, model per step"
+    text prompt_versions "JSON, prompt per step"
     text rules_version
-    text raw_draft "JSON, the model's text with placeholders"
-    text guard_result "JSON, every check and its result"
-    text meaning_check "JSON"
+    text raw_draft "JSON, one draft per attempt"
+    text guard_result "JSON, rule checks per attempt"
+    text meaning_check "JSON, verdict per attempt"
     int attempts
     text rendered_answer
     text rendered_say
@@ -125,7 +125,7 @@ erDiagram
 | `consent` | The homeowner's consent to a soft credit check | `kind`, `consent_text_version`, `given_at` | FR-4: no soft check without a consent row first. Records which wording was consented to. The contractor is the session's owner. If the check then fails, the consent row stays: it was given. |
 | `offer_set` | One soft check and what it returned | `consent_id`, `amount`, `budget`, `applicant_ref`, `offer_count`, `catalog_version`, `quote_version` | Links every set of offers to the consent that allowed it, and records which catalog and calculator produced the cards. The budget is stored here but never sent to the credit engine. `applicant_ref` is a mock fixture ID; production stores the decision engine's reference, not personal data. |
 | `offer` | One offer from the decision engine | key (`offer_set_id`, `id`); `kind`, `apr_percent`, `term_months`, `promo_months` | Stores the engine's decision exactly as returned. Every figure shown can be recomputed from these rows with the quote engine. |
-| `assistant_turn` | One contractor message and everything that happened to it | `route`, `outcome`, `raw_draft`, `guard_result`, `meaning_check`, `rendered_*`, `model`, `prompt_version`, `rules_version`, tokens, `latency_ms` | FR-14: "what the system said and why". Raw draft and rendered text side by side show the placeholders being filled. Tokens per turn feed cost tracking (FR-18) and the rate limit (FR-17). |
+| `assistant_turn` | One contractor message and everything that happened to it | `route`, `outcome`, `raw_draft`, `guard_result`, `meaning_check` (one entry per attempt), `rendered_*`, `models`, `prompt_versions`, `rules_version`, tokens, `latency_ms` | FR-14: "what the system said and why". Raw draft and rendered text side by side show the placeholders being filled. Tokens per turn feed cost tracking (FR-18) and the rate limit (FR-17). |
 | `escalation` | A turn the guard blocked twice | `turn_id`, `reason`, `ticket_ref` | F-2: the standard explanation was shown and compliance gets a ticket (Zapier → JSM in production, logged in the prototype). |
 
 ### Not stored, on purpose

@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-28.3",
+  "version": "2026-10-28.5",
   "phraseRules": [
     {
       "rule": "G-2",
@@ -49,5 +49,11 @@
         "zero interest"
       ]
     }
-  ]
+  ],
+  "fixedWording": {
+    "creditDecisionBeforeOffers": "Approval and rates come from the lender's soft check, not from me. The check returns her actual offers, if there are any.",
+    "creditDecisionAfterOffers": "The offers on screen are what the lender's check returned. Approval and rates come from the lender, so I can't say more about her credit.",
+    "offTopic": "I can only help with the financing for this project. For tax, legal or other questions, she should ask the right professional.",
+    "noOffers": "No offers came back from this check. The lender will send the homeowner a notice explaining why, and I can't say more about it."
+  }
 }

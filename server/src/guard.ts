@@ -47,7 +47,7 @@ export function guard(draft: Draft, screen: Screen): { pass: boolean; failures: 
 // Number words the model might use to slip a figure past the digit check.
 // "one" is left out: it's mostly a pronoun ("this one fits her budget").
 // "half" and "grand" stay in even though they block the odd honest sentence.
-const NUMBER_WORDS = [
+export const NUMBER_WORDS = [
   "zero", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve",
   "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "thirty",
   "forty", "fifty", "sixty", "seventy", "eighty", "ninety", "hundred", "thousand", "million",
@@ -73,8 +73,8 @@ function numberFidelity(text: string, screen: Screen): Failure[] {
   for (const quote of prose.match(/[{}]+/g) ?? []) {
     failures.push({ rule: "G-1", reason: "malformed placeholder", quote });
   }
-  // Any Unicode digit (not just 0-9), the % sign, and number words.
-  for (const quote of [...(prose.match(/\p{Nd}[\p{Nd},.]*|%/gu) ?? []), ...(prose.match(NUMBER_WORD_PATTERN) ?? [])]) {
+  // Any Unicode digit (not just 0-9), the % and $ signs (figures already carry them), and number words.
+  for (const quote of [...(prose.match(/\p{Nd}[\p{Nd},.]*|%|\$/gu) ?? []), ...(prose.match(NUMBER_WORD_PATTERN) ?? [])]) {
     failures.push({ rule: "G-1", reason: "number written by the model", quote });
   }
   return failures;

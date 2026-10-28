@@ -102,6 +102,16 @@ export type CardLabel =
 /** An offer chosen for one of the three card slots, labelled by what it's best at. */
 export type Card = DisclosedOffer & { label: CardLabel };
 
+/** What each label says on the card. Never "recommended" (NG-3). */
+export const CARD_TITLES: Record<CardLabel, string> = {
+  lowest_total: "Lowest total cost",
+  lowest_total_and_monthly: "Lowest total cost and lowest monthly",
+  lowest_monthly: "Lowest monthly",
+  promo: "Promo",
+  next_lowest_total: "Next lowest total cost",
+  next_lowest_total_2: "Next lowest total cost",
+};
+
 const MAX_CARDS = 3;
 
 /**
@@ -186,8 +196,9 @@ export type Figures = Record<string, string>;
  * render() fills it from this table. Names follow the card label, so they
  * don't depend on card order.
  */
-export function figures(cards: Card[]): Figures {
+export function figures(cards: Card[], budget?: number): Figures {
   const out: Figures = {};
+  if (budget !== undefined) out.budget = money(budget);
   for (const card of cards) {
     const prefix = card.label;
     out[`${prefix}.monthly`] = money(card.monthlyPayment);

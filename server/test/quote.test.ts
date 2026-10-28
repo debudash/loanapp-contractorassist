@@ -284,4 +284,10 @@ describe("figures", () => {
       "next_lowest_total_2.monthly": "$413.08",
     });
   });
+
+  // Review fix (slice 4, spec S5): found by spec review; "under her $300 budget" had no figure to use.
+  it("names the budget as a figure when one was given", () => {
+    expect(figures(cards, 300)).toMatchObject({ budget: "$300.00" });
+    expect(figures(cards)).not.toHaveProperty("budget");
+  });
 });

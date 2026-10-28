@@ -161,7 +161,13 @@ function guard(draft: Draft, screen: Screen): { pass: boolean; failures: Failure
 //   Draft = { answer, say }   Screen = { figures, promoOnScreen }   rules: compliance-rules.json
 function checkInputs(message: string, suggested: SuggestedInputs): { inputs: SuggestedInputs; dropped: ("amount" | "budget")[] }; // G-5
 function render(text: string, figures: Figures): string;   // render.ts also owns the {{placeholder}} syntax
-function assist(req: AssistRequest, deps: AssistDeps): Promise<AssistResult>;
+function assist(req: { sessionId; contractorId; message }, deps: { model, audit, catalog, escalate }): Promise<AssistResult>;
+//   AssistResult = suggestion { inputs, dropped } | answer { outcome, answer, say } | unavailable { message }
+interface Model {   // anthropicModel.ts: Haiku 5.5 (understand, meaningCheck), Sonnet 5.5 (explain)
+  understand(message): Understanding;        // inputs | question | credit_decision | off_topic
+  explain(request: ExplainRequest): Draft;   // { answer, say } with {{placeholders}}
+  meaningCheck(draft): MeaningVerdict;       // { pass, quote, reason }
+}
 ```
 
 ### Test seams
@@ -289,7 +295,7 @@ Built in vertical slices, test-first. Each slice is a GitLab merge request: buil
 | 1 | Quote engine: payment maths, ballpark, budget fit, three cards, cliff, disclosures, figures | `ballpark()`, `presentOffers()`, `figures()` | Done (`0b7c51e`) |
 | 2 | Guard and render: placeholders, G-1 to G-5 rule checks, compliance rules file | `render()`, `guard()`, `checkInputs()` | Done (MR 1) |
 | 3 | Decision engine mock, consent, audit store | `POST /sessions`, `/offers`, `/ballpark`, `GET /sessions/:id/audit` | Done (MR 2) |
-| 4 | AI steps: understand, explain, meaning check, retry and fallback | `assist()` with the model faked at the boundary | |
+| 4 | AI steps: understand, explain, meaning check, retry and fallback | `assist()` with the model faked at the boundary | Done (MR 3) |
 | 5 | API wiring and rate limit | HTTP routes | |
 | 6 | React UI: inputs panel, cards, assistant panel, compliance view | Manual check plus a few component tests | |
 | 7 | Evals against the real model | Eval suite | |

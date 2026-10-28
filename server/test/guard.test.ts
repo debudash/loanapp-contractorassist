@@ -28,6 +28,7 @@ describe("guard", () => {
   describe("G-1: every number comes from code", () => {
     it("fails a digit the model wrote itself", () => {
       expect(guard(answer("That's about $290 a month."), screen).failures).toEqual([
+        { rule: "G-1", reason: "number written by the model", quote: "$" },
         { rule: "G-1", reason: "number written by the model", quote: "290" },
       ]);
     });
@@ -44,6 +45,8 @@ describe("guard", () => {
       "That's 9% lower.",
       "By the sixtieth payment it's different.",
       "The hundredth payment is smaller.",
+      // Review fix (slice 4, spec S4): found by spec review; "${{x.monthly}}" rendered "$$289.31".
+      "It's ${{lowest_monthly.monthly}} a month.",
     ])("fails a number slipped in as words or symbols: %s", (text) => {
       expect(rulesFailed(answer(text))).toContain("G-1");
     });
