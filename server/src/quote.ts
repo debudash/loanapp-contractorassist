@@ -7,6 +7,14 @@ import type { FixedProduct, Offer, Product } from "./domain.js";
 export const LOAN_MIN = 5_000;
 export const LOAN_MAX = 100_000;
 
+/** Recorded with every offer set, so the audit trail knows which calculator produced the cards. */
+export const QUOTE_VERSION = "quote@1";
+
+/** Written as "not inside" so NaN is rejected too. */
+export function amountInRange(amount: number): boolean {
+  return amount >= LOAN_MIN && amount <= LOAN_MAX;
+}
+
 // ---------------------------------------------------------------- Ballpark
 
 export type TermFit = "fits_any_rate" | "fits_some_rates" | "does_not_fit";
@@ -30,8 +38,7 @@ export type BallparkResult =
  */
 export function ballpark(input: { amount: number; budget?: number }, products: Product[]): BallparkResult {
   const { amount, budget } = input;
-  // Written as "not inside" so NaN is rejected too.
-  if (!(amount >= LOAN_MIN && amount <= LOAN_MAX)) {
+  if (!amountInRange(amount)) {
     return { ok: false, reason: "amount_out_of_range", min: LOAN_MIN, max: LOAN_MAX };
   }
   const fixed = products.filter((p): p is FixedProduct => p.kind === "fixed");

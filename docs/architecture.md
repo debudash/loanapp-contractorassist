@@ -34,7 +34,7 @@ flowchart LR
   end
 
   LLM[[Anthropic API<br/>Haiku 5.5 · Sonnet 5.5]]
-  LOG[(Audit log<br/>JSONL locally)]
+  LOG[(Audit store<br/>SQLite locally)]
 
   C --> Portal
   IP --> Q
@@ -56,7 +56,7 @@ flowchart LR
 | Partner portal | React + Vite app | Panel inside the existing portal |
 | Assistant service | Express in Docker | ECS Fargate service |
 | Catalog, profile, decision engine | In-process mocks, same interfaces | Existing internal APIs |
-| Audit log | Append-only JSONL file | RDS Postgres (append-only) + S3 Object Lock |
+| Audit log | SQLite tables, append-only by trigger ([data-model.md](data-model.md)) | RDS Postgres (append-only) + S3 Object Lock |
 | Zapier → JSM | Stub that logs the ticket | Zapier webhook to Jira Service Management |
 | Anthropic API | Real calls | Real calls, key in Secrets Manager |
 
@@ -83,7 +83,8 @@ flowchart TB
     R1["POST /ballpark"]
     R2["POST /offers"]
     R3["POST /assist"]
-    R4["GET /audit/:sessionId"]
+    R0["POST /sessions"]
+    R4["GET /sessions/:id/audit"]
   end
 
   subgraph quote["Quote engine · pure functions"]
@@ -107,7 +108,7 @@ flowchart TB
   subgraph adapters["Adapters · interfaces with mock implementations"]
     LC["LoanCatalog"]
     DEI["DecisionEngine"]
-    AL["AuditLog"]
+    AL["AuditStore"]
     ES["Escalation"]
     MD["Model (Anthropic client)"]
   end
@@ -139,12 +140,14 @@ flowchart TB
 ```ts
 // Adapters: the mock and the real service implement the same interface.
 interface LoanCatalog {
+  version: string;
   productsFor(contractorId: string): Product[];        // enrolled products only
 }
 interface DecisionEngine {
-  softCheck(req: SoftCheckRequest): Promise<Offer[]>;  // [] means no offers
+  softCheck(req: { applicantRef: string; amount: number }): Promise<Offer[]>;  // [] means no offers
 }
-interface AuditLog { append(record: AuditRecord): void; read(sessionId: string): AuditRecord[] }
+// AuditStore (SQLite, append-only): ensureSession, recordConsent, recordOfferSet, recordTurn, sessionTrail.
+// Tables and columns: docs/data-model.md
 interface Escalation { raise(ticket: { reason: string; turnId: string }): void }
 
 // Quote engine: pure, no I/O, no model.
@@ -167,7 +170,7 @@ function assist(req: AssistRequest, deps: AssistDeps): Promise<AssistResult>;
 |---|---|---|
 | `ballpark()`, `presentOffers()`, `figures()` | Worked examples (known amortization values) | Nothing: pure functions |
 | `guard()`, `checkInputs()`, `render()` | Pass and fail drafts per rule | Nothing: pure functions |
-| `assist()` | Lane routing, retry, fallback, audit record | `Model`, `AuditLog`, `Escalation` |
+| `assist()` | Lane routing, retry, fallback, audit record | `Model`, `AuditStore`, `Escalation` |
 | HTTP routes | Consent required, rate limit, status codes | Adapters |
 | Real model behaviour | Eval suite | Nothing: real API calls |
 
@@ -202,7 +205,7 @@ sequenceDiagram
   participant S as Service
   participant DE as DecisionEngine
   participant Q as Quote engine
-  participant AL as AuditLog
+  participant AL as AuditStore
 
   C->>UI: Ticks "homeowner consents to a soft check"
   C->>UI: Run soft check
@@ -210,7 +213,7 @@ sequenceDiagram
   alt consent missing
     S-->>UI: 400, nothing called
   else consent given
-    S->>AL: append(consent, contractorId, time)
+    S->>AL: recordConsent(session, wording version)
     S->>DE: softCheck(applicant, amount)
     DE-->>S: Offers, or none
     alt no offers
@@ -232,7 +235,7 @@ sequenceDiagram
   participant S as assist()
   participant M as Model
   participant G as Guard
-  participant AL as AuditLog
+  participant AL as AuditStore
   participant E as Escalation
 
   C->>UI: "Which one should she go with?"
@@ -252,7 +255,7 @@ sequenceDiagram
     S->>S: Fixed explanation written in code
     S->>E: raise(ticket)
   end
-  S->>AL: append(question, raw text, verdicts, rendered text, model, versions, tokens)
+  S->>AL: recordTurn(question, raw text, verdicts, rendered text, model, versions, tokens)
   S-->>UI: Answer + "say it like this" line
 ```
 
@@ -284,8 +287,8 @@ Built in vertical slices, test-first. Each slice is a GitLab merge request: buil
 | # | Slice | Seams under test | Status |
 |---|---|---|---|
 | 1 | Quote engine: payment maths, ballpark, budget fit, three cards, cliff, disclosures, figures | `ballpark()`, `presentOffers()`, `figures()` | Done (`0b7c51e`) |
-| 2 | Guard and render: placeholders, G-1 to G-5 rule checks, compliance rules file | `render()`, `guard()`, `checkInputs()` | In progress |
-| 3 | Decision engine mock, consent, audit log | `POST /offers` | |
+| 2 | Guard and render: placeholders, G-1 to G-5 rule checks, compliance rules file | `render()`, `guard()`, `checkInputs()` | Done (MR 1) |
+| 3 | Decision engine mock, consent, audit store | `POST /sessions`, `/offers`, `/ballpark`, `GET /sessions/:id/audit` | Done (MR 2) |
 | 4 | AI steps: understand, explain, meaning check, retry and fallback | `assist()` with the model faked at the boundary | |
 | 5 | API wiring and rate limit | HTTP routes | |
 | 6 | React UI: inputs panel, cards, assistant panel, compliance view | Manual check plus a few component tests | |
