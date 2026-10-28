@@ -8,3 +8,6 @@ dist/
 # Local secrets and data
 .env
 data/
+
+# Eval run output (summaries are copied into docs/EVALS.md)
+server/evals/results/
