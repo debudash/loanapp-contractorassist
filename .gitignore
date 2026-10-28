@@ -4,3 +4,7 @@ docs/source/
 # Dependencies and build output live in containers
 node_modules/
 dist/
+
+# Local secrets and data
+.env
+data/
