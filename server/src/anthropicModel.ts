@@ -19,9 +19,7 @@ const VerdictSchema = z.object({ pass: z.boolean(), quote: z.string().nullable()
 
 export class AnthropicModel implements Model {
   readonly names = { understand: "claude-haiku-5-5", explain: "claude-sonnet-5-5", check: "claude-haiku-5-5" };
-  // No SDK retries: assist() owns the deadline and cancels through the abort signal,
-  // so nothing keeps running (and billing) after a question has given up.
-  private readonly client = new Anthropic({ maxRetries: 0 });
+  private client?: Anthropic;
 
   async understand(message: string, signal: AbortSignal): Promise<{ value: Understanding; usage: Usage }> {
     const { value, usage } = await this.call(this.names.understand, UNDERSTAND_SYSTEM, message, UnderstandingSchema, 2_048, signal);
@@ -43,11 +41,21 @@ export class AnthropicModel implements Model {
     return this.call(this.names.check, MEANING_CHECK_SYSTEM, content, VerdictSchema, 2_048, signal);
   }
 
+  /**
+   * The client, created on first use so the service (and the cards) run even with no API key set.
+   * No SDK retries: assist() owns the deadline and cancels through the abort signal, so nothing
+   * keeps running (and billing) after a question has given up. Called inside call()'s try.
+   */
+  private anthropic(): Anthropic {
+    this.client ??= new Anthropic({ maxRetries: 0 });
+    return this.client;
+  }
+
   /** One structured call. Output caps (which include the model's thinking) bound the cost of each call (FR-16). */
   private async call<T>(model: string, system: string, content: string, schema: z.ZodType<T>, maxTokens: number, signal: AbortSignal) {
     let response;
     try {
-      response = await this.client.messages.parse(
+      response = await this.anthropic().messages.parse(
         {
           model,
           max_tokens: maxTokens,

@@ -16,12 +16,14 @@ export class FakeModel implements Model {
   drafts: Draft[] = [];
   verdicts: MeaningVerdict[] = [];
   explainRequests: ExplainRequest[] = [];
+  understandCalls: string[] = [];
   /** Make this step fail as the real adapter does when the API errors. */
   failOn?: Step;
   /** Make this step never answer, so only the deadline ends it. */
   hangOn?: Step;
 
-  understand(_message: string, signal: AbortSignal) {
+  understand(message: string, signal: AbortSignal) {
+    this.understandCalls.push(message);
     return this.next("understand", this.understandings, signal);
   }
   explain(request: ExplainRequest, signal: AbortSignal) {

@@ -1,0 +1,147 @@
+import request from "supertest";
+import { describe, expect, it } from "vitest";
+import { createApp, DEFAULT_LIMITS, type Deps } from "../src/app.js";
+import { AuditStore } from "../src/audit.js";
+import rules from "../src/compliance-rules.json" with { type: "json" };
+import { mockCatalog } from "../src/mocks/catalog.js";
+import { MockDecisionEngine } from "../src/mocks/decisionEngine.js";
+import { FakeModel } from "./fakeModel.js";
+
+const asSummit = { "x-contractor-id": "c_summit" };
+const credit = { kind: "credit_decision" as const };
+
+async function setup(overrides: Partial<Deps> = {}) {
+  const audit = new AuditStore(":memory:");
+  const model = new FakeModel();
+  const app = createApp({
+    catalog: mockCatalog,
+    engine: new MockDecisionEngine(),
+    audit,
+    model,
+    escalate: (turnId) => `JSM-STUB-${turnId}`,
+    ...overrides,
+  });
+  const sessionId = (await request(app).post("/api/sessions").set(asSummit)).body.sessionId as string;
+  const ask = (message = "Will she qualify?") => request(app).post("/api/assist").set(asSummit).send({ sessionId, message });
+  const trail = async () => (await request(app).get(`/api/sessions/${sessionId}/audit`).set(asSummit)).body;
+  return { app, model, sessionId, ask, trail };
+}
+
+describe("POST /api/assist", () => {
+  it("returns the assist pipeline's result for a fixed-wording redirect", async () => {
+    const { model, ask } = await setup();
+    model.understandings.push(credit);
+
+    const res = await ask();
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ kind: "answer", outcome: "redirected" });
+  });
+
+  it("stops a contractor at the hourly limit, and records the refusal (FR-17)", async () => {
+    const { model, ask, trail } = await setup({ limits: { perHour: 2, perDay: 200 } });
+    model.understandings.push(credit, credit);
+
+    await ask();
+    await ask();
+    const third = await ask();
+
+    expect(third.status).toBe(429);
+    expect(third.body).toEqual({ error: "rate_limited", message: "Question limit reached for now. The cards and figures still work." });
+    expect((await trail()).turns.map((t: { outcome: string }) => t.outcome)).toEqual(["redirected", "redirected", "rate_limited"]);
+  });
+
+  it("applies the daily limit too", async () => {
+    const { model, ask } = await setup({ limits: { perHour: 30, perDay: 1 } });
+    model.understandings.push(credit);
+
+    await ask();
+
+    expect((await ask()).status).toBe(429);
+  });
+
+  // Review fix (slice 5, spec S1): found by spec review; parallel questions all passed the check.
+  it("counts questions still in flight, so parallel requests can't pass the limit", async () => {
+    const { model, ask } = await setup({ limits: { perHour: 2, perDay: 200 }, deadlineMs: 200 });
+    model.hangOn = "understand";
+
+    const statuses = (await Promise.all([ask(), ask(), ask()])).map((r) => r.status).sort();
+
+    expect(statuses).toEqual([200, 200, 429]);
+  });
+
+  it("records a rate-limited turn with the offers on screen (FR-14)", async () => {
+    const { app, sessionId, ask, trail } = await setup({ limits: { perHour: 0, perDay: 0 } });
+    await request(app).post("/api/offers").set(asSummit)
+      .send({ sessionId, amount: 30_000, applicantRef: "moderate", consent: { given: true, textVersion: "v1" } });
+
+    await ask();
+
+    const [turn] = (await trail()).turns;
+    expect(turn).toMatchObject({ outcome: "rate_limited", offerSetId: expect.any(Number) });
+    expect(turn.offersOnScreen).toHaveLength(3);
+  });
+
+  it.each([
+    ["", { error: "message_required" }],
+    ["x".repeat(501), { error: "message_too_long", max: 500 }],
+  ])("refuses a bad message before calling the model: %#", async (message, error) => {
+    const { model, ask } = await setup();
+
+    const res = await ask(message);
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual(error);
+    expect(model.understandCalls).toEqual([]);
+  });
+
+  it("accepts a message of exactly 500 characters", async () => {
+    const { model, ask } = await setup();
+    model.understandings.push(credit);
+
+    expect((await ask("x".repeat(500))).status).toBe(200);
+  });
+
+  it("only works on the contractor's own session", async () => {
+    const { app, sessionId } = await setup();
+
+    const res = await request(app).post("/api/assist").set({ "x-contractor-id": "c_valley" }).send({ sessionId, message: "Hi" });
+
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({ error: "session_not_yours" });
+  });
+
+  // Review fix (slice 5, spec S3): found by spec review; bad JSON returned an HTML page.
+  it("answers invalid JSON with a JSON error", async () => {
+    const { app } = await setup();
+
+    const res = await request(app).post("/api/sessions").set(asSummit).set("content-type", "application/json").send("{oops");
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: "invalid_json" });
+  });
+
+  it("uses the default limits when none are given", () => {
+    expect(DEFAULT_LIMITS).toEqual({ perHour: 30, perDay: 200 });
+  });
+});
+
+describe("POST /api/offers wording", () => {
+  // Review fix (slice 5, spec S2): found by spec review; the no-offers wording existed twice.
+  it("uses the compliance file's no-offers wording", async () => {
+    const { app, sessionId } = await setup();
+
+    const res = await request(app).post("/api/offers").set(asSummit)
+      .send({ sessionId, amount: 30_000, applicantRef: "no_offers", consent: { given: true, textVersion: "v1" } });
+
+    expect(res.body.message).toBe(rules.fixedWording.noOffers);
+  });
+});
+
+describe("GET /health", () => {
+  it("answers without a contractor identity, after touching the audit store", async () => {
+    const { app } = await setup();
+
+    expect((await request(app).get("/health")).body).toEqual({ ok: true });
+  });
+});
