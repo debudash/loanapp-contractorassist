@@ -154,9 +154,10 @@ function presentOffers(offers: Offer[], budget?: number): { cards: Card[]; allOf
 function figures(cards: Card[]): Figures;   // "lowest_monthly.monthly" -> "$289.31"; lifetime totals also get ".rounded"
 
 // Assist pipeline.
-function guard(draft: Draft, ctx: GuardContext): Verdict[];  // G-1 to G-4, deterministic
-function checkInputs(message: string, suggested: SuggestedInputs): SuggestedInputs; // G-5
-function render(text: string, figures: Figures): string;
+function guard(draft: Draft, screen: Screen): { pass: boolean; failures: Failure[] };  // G-1 to G-4, deterministic
+//   Draft = { answer, say }   Screen = { figures, promoOnScreen }   rules: compliance-rules.json
+function checkInputs(message: string, suggested: SuggestedInputs): { inputs: SuggestedInputs; dropped: ("amount" | "budget")[] }; // G-5
+function render(text: string, figures: Figures): string;   // render.ts also owns the {{placeholder}} syntax
 function assist(req: AssistRequest, deps: AssistDeps): Promise<AssistResult>;
 ```
 
@@ -275,3 +276,18 @@ sequenceDiagram
   C->>UI: Apply
   UI->>Q: Ballpark and offers rerun with the new inputs
 ```
+
+## 4. Build plan
+
+Built in vertical slices, test-first. Each slice is a GitLab merge request: built on a branch, reviewed on two axes (coding standards, and the spec in [PRD.md](PRD.md)), fixed test-first, then squash-merged. The review findings and their fixes stay in the merge request.
+
+| # | Slice | Seams under test | Status |
+|---|---|---|---|
+| 1 | Quote engine: payment maths, ballpark, budget fit, three cards, cliff, disclosures, figures | `ballpark()`, `presentOffers()`, `figures()` | Done (`0b7c51e`) |
+| 2 | Guard and render: placeholders, G-1 to G-5 rule checks, compliance rules file | `render()`, `guard()`, `checkInputs()` | In progress |
+| 3 | Decision engine mock, consent, audit log | `POST /offers` | |
+| 4 | AI steps: understand, explain, meaning check, retry and fallback | `assist()` with the model faked at the boundary | |
+| 5 | API wiring and rate limit | HTTP routes | |
+| 6 | React UI: inputs panel, cards, assistant panel, compliance view | Manual check plus a few component tests | |
+| 7 | Evals against the real model | Eval suite | |
+| 8 | Docker run, README, design doc | `docker compose up` | |
