@@ -46,7 +46,8 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
 **Guard (rules live in one compliance-owned file)**
 - **G-1** *Number fidelity:* every number the homeowner sees or hears comes from code. Model output fails if it contains:
   - a digit outside a resolved placeholder; terms and months count too (`{{lowest_monthly.term_years}}`)
-  - a spelled-out number ("twenty-four thousand")
+  - a spelled-out number or number symbol ("twenty-four thousand", "zero", "a dozen", "half", "a couple grand", "thirteenth", "percent", "%"). "One" is allowed because it's mostly a pronoun ("this one"); "one year" slipping through is a known gap left to the meaning check and evals
+  - a malformed placeholder that would show raw braces
   - a placeholder that doesn't match an offer on screen
 
   Placeholder names follow the card label, and each label appears once per screen. Which names exist depends on the offers (for example, `diff.*` only exists when lowest total and lowest monthly are different cards), so the explain prompt is given the list of names that exist for this screen, never a fixed list.
@@ -58,7 +59,9 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
   1. **Phrase list:** code blocks known phrases from the rules file. Fast, and the reason for each block is obvious.
   2. **Meaning check:** Haiku answers one yes/no question: "Does this suggest approval, or which offer to pick, or use misleading terms?" It quotes the phrase it flagged. This catches rewordings the list misses.
   3. **Evals:** about 20 tricky rewordings must all be blocked. This measures what the first two layers miss.
-- **G-4** *Disclosure completeness:* the renderer refuses to show any payment without the FR-7 fields. This is enforced in code, not by the model. **The spoken line counts too:** if the "say it like this" line mentions an offer's monthly payment, it must also include that offer's APR and term placeholders ("$289.31 a month for 20 years at 9.99% APR"), or the guard fails it.
+
+  The phrase list is a deliberately conservative floor. It blocks a few honest sentences ("qualify", "free") and misses some rewordings ("I'd suggest", "she recommends it" in other forms); the meaning check and evals cover those. Choices are logged in [AI_LOG.md](AI_LOG.md).
+- **G-4** *Disclosure completeness:* the renderer refuses to show any payment without the FR-7 fields. This is enforced in code, not by the model. **The spoken line counts too:** if the "say it like this" line mentions an offer's monthly payment, it must also include that offer's APR and term placeholders ("$289.31 a month for 20 years at 9.99% APR"), or the guard fails it. A promo payment said aloud must also include its cliff. A difference between offers (`diff.monthly`) isn't a payment and needs neither.
 - **G-5** *Input fidelity:* every number the assistant extracts in FR-13 must appear in the contractor's text, allowing normalisation such as "30K" → 30000 and "$300/mo" → 300. Otherwise the field stays empty and the contractor is asked for it. The model may copy numbers but never invent them.
 
 **Audit**

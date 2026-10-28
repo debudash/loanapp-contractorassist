@@ -1,0 +1,53 @@
+{
+  "version": "2026-10-28.3",
+  "phraseRules": [
+    {
+      "rule": "G-2",
+      "reason": "credit decision or recommendation",
+      "phrases": [
+        "approved",
+        "pre-approved",
+        "approval is likely",
+        "qualify",
+        "qualifies",
+        "guaranteed",
+        "credit is good",
+        "go with",
+        "recommend",
+        "recommended",
+        "recommends",
+        "recommendation",
+        "best for her",
+        "best for you",
+        "right choice",
+        "should choose",
+        "should pick",
+        "you should take",
+        "she should take",
+        "you should go",
+        "she should go",
+        "best option"
+      ]
+    },
+    {
+      "rule": "G-3",
+      "reason": "misleading marketing or pressure",
+      "phrases": [
+        "free",
+        "best deal",
+        "stretch to"
+      ]
+    },
+    {
+      "rule": "G-3",
+      "reason": "misleading on a deferred-interest promo",
+      "whenPromoOnScreen": true,
+      "phrases": [
+        "no interest",
+        "no-interest",
+        "interest-free",
+        "zero interest"
+      ]
+    }
+  ]
+}
