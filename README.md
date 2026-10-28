@@ -1,0 +1,85 @@
+# On-site financing assistant
+
+A contractor in a homeowner's kitchen types *"$30K roof, she can do $300 a month"* and sees payment ranges straight away. After a soft credit check, three real offers appear with every disclosure. An assistant explains them in plain language.
+
+The assistant is designed so the model never writes a figure, never makes or hints at a credit decision, and never steers the homeowner. Each rule is enforced in code and measured by evals. Every answer is recorded for compliance.
+
+Built for the AI Solutions Engineer take-home. Design document: [docs/DESIGN.md](docs/DESIGN.md).
+
+## Run it
+
+You need Docker. Nothing else runs on your machine. The first build downloads dependencies and takes a few minutes; after that the stack starts in seconds.
+
+```bash
+cp .env.example .env          # optional: add ANTHROPIC_API_KEY to enable the assistant
+docker compose up --build     # first build takes a few minutes
+```
+
+Open **http://localhost:5180**.
+
+Without an API key the app still works: ballpark, soft check and offer cards are pure code. The assistant answers "unavailable", which is the designed behaviour when the model can't be reached.
+
+### A two-minute demo
+
+1. The ballpark shows payment ranges for $30,000 against a $300 budget. No AI involved.
+2. Tick the consent box and **Run soft check**. Three cards appear: lowest total cost, lowest monthly, promo, each with full disclosures; the promo shows its $4,409.69 cliff.
+3. **Ask the assistant**: "Which one fits her budget?", "Explain the promo", "She's got a 780 score, she'll get approved right?", or "drop it to $25K, she can do 250" (then tap **Apply**).
+4. **Compliance view** shows what was said and why: the model's draft with placeholders, every check, models, prompt versions, tokens.
+
+Try "Homeowner C (no offers)" and "Valley HVAC" for the other paths.
+
+## Tests and evals
+
+```bash
+docker compose run --rm test       # server: typecheck + 133 unit and HTTP tests, model faked at the boundary
+docker compose run --rm web-test   # web: typecheck + 7 component and App tests
+docker compose run --rm evals      # real models: 42 cases on 4 screens, run twice; needs ANTHROPIC_API_KEY
+```
+
+Eval results are written to `server/evals/results/` and summarised in [docs/EVALS.md](docs/EVALS.md).
+
+## Configuration
+
+| Variable | Where | Purpose |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | `.env` | Real model calls (assistant, evals). Optional for the app. |
+| `DB_PATH` | compose | SQLite audit store, in the `audit-data` volume. |
+| `PORT` | optional | API port inside the network; defaults to 4100. |
+
+Ports on your machine: **5180** (web), **4100** (API). Contractor identity comes from the `x-contractor-id` header; in the portal, authentication happens upstream.
+
+## How it's built
+
+```
+web/       React app (inputs, ballpark, soft check, cards, assistant panel, compliance view), served by nginx
+server/
+  src/quote.ts           payment maths, ballpark, three cards, disclosures, figures   ← every number starts here
+  src/guard.ts           G-1 to G-4: no model-written numbers, no decisions, no steering, disclosures spoken
+  src/render.ts          fills {{placeholders}} with figures
+  src/inputs.ts          G-5: the model may copy numbers the contractor typed, never invent them
+  src/assist.ts          the pipeline: understand → suggest | explain → guard → meaning check → retry → fallback
+  src/anthropicModel.ts  Haiku 5.5 (understand, check), Sonnet 5.5 (explain); structured outputs
+  src/compliance-rules.json  phrase lists and fixed wording, owned by compliance
+  src/audit.ts, schema.ts    append-only audit tables (SQLite here, Postgres in production)
+  src/mocks/             loan catalog and credit decision engine, same interfaces as production
+  evals/                 eval cases, graders, Opus 5.5 judges
+docs/      PRD, design, architecture, data model, evals, AI log
+```
+
+Architecture and sequence diagrams: [docs/architecture.md](docs/architecture.md). Tables: [docs/data-model.md](docs/data-model.md).
+
+## Deployment guide (production)
+
+Each prototype piece has a production counterpart on the company's AWS stack:
+
+1. **Assistant service** → build the `runtime` target of `server/Dockerfile`, push to ECR, run on ECS Fargate next to the portal API (health check `GET /health`).
+2. **Audit store** → RDS Postgres. Port the SQLite DDL in `server/src/schema.ts` (identity columns instead of `AUTOINCREMENT`, numeric types for money); append-only comes from the service's role having only `INSERT` and `SELECT`. Nightly export to S3 with Object Lock.
+3. **Adapters** → replace `server/src/mocks/` with clients for the loan catalog, contractor profile and credit decision engine (`ports.ts` interfaces).
+4. **Secrets** → `ANTHROPIC_API_KEY` from AWS Secrets Manager.
+5. **UI** → the panel components move into the partner portal; `x-contractor-id` comes from the portal's session.
+6. **Escalations** → point `escalation.ts` at the Zapier webhook that opens JSM tickets.
+7. **CI/CD** → lint → unit tests → eval suite (gate) → build → staging smoke → canary → monitor.
+
+## AI usage
+
+Built with Claude Code. How AI was used, and every decision the AI made itself, is in [docs/AI_LOG.md](docs/AI_LOG.md). Each slice was reviewed by two AI reviewers (coding standards, and against the PRD); the findings and fixes are in the merge requests.

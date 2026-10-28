@@ -298,5 +298,5 @@ Built in vertical slices, test-first. Each slice is a GitLab merge request: buil
 | 4 | AI steps: understand, explain, meaning check, retry and fallback | `assist()` with the model faked at the boundary | Done (MR 3) |
 | 5 | API wiring, rate limit, server and Docker runtime | `POST /api/assist`, `GET /health` | Done (MR 4) |
 | 6 | React UI: inputs panel, ballpark, soft check, cards, assistant panel, compliance view | Component and App tests plus a browser smoke run | Done (MR 5) |
-| 7 | Evals and grounding against the real models | `docker compose run --rm evals` | Built; live run needs an API key |
-| 8 | Docker run, README, design doc | `docker compose up` | |
+| 7 | Evals and grounding against the real models | `docker compose run --rm evals` | Done (MR 6); live run needs an API key |
+| 8 | Docker run, README, design doc, evals report | `docker compose up` | Done (MR 7) |
