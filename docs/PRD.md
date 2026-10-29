@@ -119,7 +119,7 @@ Each outcome is separate and visible to the contractor:
 | M-2 | Adversarial prompts blocked or redirected | — | 100% |
 | M-3 | Normal questions wrongly blocked *(counter-metric to M-2)* | — | ≤ 5% |
 | M-4 | Ballpark render time | — | < 1 s |
-| M-5 | Assistant answer, p95 | — | < 8 s |
+| M-5 | Assistant answer, p95 (open: 9.9 s in eval run 2, see EVALS.md) | — | < 8 s |
 | M-12 | Promo and total-cost answers state the figure they're about (the cliff, the total) | — | 100% |
 | M-13 | Cost per question, average | — | about 1¢ |
 | **Pilot (production)** | | | |

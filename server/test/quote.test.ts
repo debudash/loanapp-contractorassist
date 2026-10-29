@@ -291,3 +291,14 @@ describe("figures", () => {
     expect(figures(cards)).not.toHaveProperty("budget");
   });
 });
+
+describe("card titles", () => {
+  // Found by the MR 8 spec review: two filler cards shared a title, so "refer to offers by
+  // name" couldn't tell them apart.
+  it("gives every card label its own title", async () => {
+    const { CARD_TITLES } = await import("../src/quote.js");
+    const titles = Object.values(CARD_TITLES);
+
+    expect(new Set(titles).size).toBe(titles.length);
+  });
+});

@@ -109,10 +109,37 @@ export const CARD_TITLES: Record<CardLabel, string> = {
   lowest_monthly: "Lowest monthly",
   promo: "Promo",
   next_lowest_total: "Next lowest total cost",
-  next_lowest_total_2: "Next lowest total cost",
+  next_lowest_total_2: "Another low total cost",
 };
 
-const MAX_CARDS = 3;
+/** What each figure is, by the part of its name after the card label ("lowest_monthly.cliff" → "cliff"). */
+export const FIGURE_MEANINGS: Record<string, string> = {
+  monthly: "monthly payment",
+  apr: "APR",
+  term_years: "term in years",
+  num_payments: "number of payments",
+  amount: "amount financed",
+  finance_charge: "finance charge",
+  total: "total of payments",
+  under_budget: "under her budget by",
+  over_budget: "over her budget by",
+  months: "promo months",
+  payoff: "amount to pay off within the promo months",
+  cliff: "deferred interest added if not paid off in time (the cliff)",
+};
+
+/** What a figure name means, in words: "promo.cliff" → "deferred interest added if not paid off in time (the cliff)". */
+export function figureMeaning(name: string): string {
+  if (name === "budget") return "the homeowner's monthly budget";
+  if (name === "diff.monthly") return "how much more a month the lowest total cost offer is than the lowest monthly offer";
+  if (name.startsWith("diff.total")) return "how much less in total the lowest total cost offer costs than the lowest monthly offer";
+  const parts = name.split(".");
+  const key = parts.slice(1).filter((p) => p !== "rounded").join(".");
+  const meaning = FIGURE_MEANINGS[key] ?? key;
+  return name.endsWith(".rounded") ? `${meaning}, rounded` : meaning;
+}
+
+export const MAX_CARDS = 3;
 
 /**
  * FR-6, FR-7: up to three cards, always in the same order so the order can't

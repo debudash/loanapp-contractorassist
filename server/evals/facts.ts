@@ -2,30 +2,15 @@
 // because it didn't know which line is read aloud to the homeowner ("your budget" is right
 // there) and the facts listed "cliff $4,409.69" without saying what the cliff is.
 import type { AssistResult } from "../src/assist.js";
-import { type Card, CARD_TITLES, type Figures } from "../src/quote.js";
-
-/** What each figure name means, in words the judge can check claims against. */
-const MEANINGS: Record<string, string> = {
-  monthly: "monthly payment",
-  apr: "APR",
-  term_years: "term in years",
-  num_payments: "number of payments",
-  amount: "amount financed",
-  finance_charge: "finance charge",
-  total: "total of payments",
-  under_budget: "under her budget by",
-  over_budget: "over her budget by",
-  months: "promo months",
-  payoff: "amount to pay off within the promo months",
-  cliff: "deferred interest added if not paid off in time (the cliff)",
-};
+import { type Card, CARD_TITLES, type Figures, figureMeaning } from "../src/quote.js";
 
 /** The facts on screen, per offer, with each figure named by what it means. */
 export function screenFacts(cards: Card[], figures: Figures, termsTexts: string[]): string {
   const offers = cards.map((card) => {
-    const own = Object.entries(MEANINGS)
-      .filter(([key]) => figures[`${card.label}.${key}`] !== undefined)
-      .map(([key, meaning]) => `${meaning} ${figures[`${card.label}.${key}`]}`);
+    // Every figure on the card, described by its meaning; none can silently drop out.
+    const own = Object.entries(figures)
+      .filter(([name]) => name.startsWith(`${card.label}.`) && !name.endsWith(".rounded"))
+      .map(([name, value]) => `${figureMeaning(name)} ${value}`);
     return `- ${CARD_TITLES[card.label]}: ${own.join("; ")}`;
   });
   return [

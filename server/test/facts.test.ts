@@ -31,3 +31,13 @@ describe("what the judges see", () => {
     expect(facts).toContain("Homeowner's monthly budget: $300.00");
   });
 });
+
+describe("judge facts completeness", () => {
+  // Found by the MR 8 standards review: a figure missing from the meanings list would vanish
+  // from what the judge sees.
+  it("shows every figure on a card, even one with no description yet", () => {
+    const facts = screenFacts(cards, { ...figures(cards, 300), "promo.new_figure": "$1.00" }, []);
+
+    expect(facts).toContain("new_figure $1.00");
+  });
+});

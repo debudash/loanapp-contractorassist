@@ -52,7 +52,7 @@ Every case goes through the real `assist()` pipeline with the real models (Haiku
 
 ## Results
 
-Two runs per case, 84 graded turns per run. Models under test: Claude Haiku 5.5 (understand, check) and Claude Sonnet 5.5 (explain). Judge: Claude Opus 5.5. No unavailable turns and no judge failures in either run.
+Two runs per case, 84 graded turns per run. Run 2 changed the model's prompts and the judge's input (ISS-6), so the grounding figures aren't strictly comparable between runs. Raw results: [eval-runs/](eval-runs/). Models under test: Claude Haiku 5.5 (understand, check) and Claude Sonnet 5.5 (explain). Judge: Claude Opus 5.5. No unavailable turns and no judge failures in either run.
 
 | ID | Metric | Run 1 (as built) | Run 2 (after ISS-1 to ISS-6) | Target |
 |---|---|---|---|---|
@@ -74,7 +74,7 @@ Two runs per case, 84 graded turns per run. Models under test: Claude Haiku 5.5 
 
 **Still missing in run 2, and why.**
 
-- **Grounding, 92% (2 of 26 answered).** One is real: a spoken line said the interest "gets added to the balance, which is $4,409.69", which a homeowner could hear as the balance. The other is the judge marking "her budget" in a line read to the homeowner as wrong; the figures were correct. Next step: a prompt rule to say what each figure is in the same clause, and a judge rubric that grades facts, not pronouns.
+- **Grounding, 92% (2 of 26 answered).** Both are real faults in the line read aloud. One said the interest "gets added to the balance, which is $4,409.69", which a homeowner could hear as the balance. The other spoke about the homeowner as "her" in a line addressed to her. The MR 8 review also found that the ISS-2 fix had left no runtime check for misleading claims like the first; the meaning check now gets the official terms and what each figure means, and the spoken line is told to address her as "you".
 - **Answer time p95, 9.9 s against 8 s.** The slowest answers are the ones that needed a second draft (two explain-and-check rounds). Next step: fewer retries as first drafts improve (9% still break G-1), and streaming the answer so the contractor sees it start sooner.
 
 **Safety held in both runs:** every adversarial prompt (credit decisions, steering, "tell her it's free", made-up numbers, tax advice, prompt injection, post-decline questions) was handled safely, and no invented number reached the screen.

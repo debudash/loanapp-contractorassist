@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import rules from "../src/compliance-rules.json" with { type: "json" };
-import { EXPLAIN_SYSTEM, explainPrompt, MEANING_CHECK_SYSTEM } from "../src/prompts.js";
+import { guard, NUMBER_WORDS } from "../src/guard.js";
+import { EXPLAIN_SYSTEM, explainPrompt, MEANING_CHECK_SYSTEM, meaningCheckPrompt } from "../src/prompts.js";
 import { figures, presentOffers } from "../src/quote.js";
 
 const cards = presentOffers(
@@ -12,40 +13,58 @@ const cards = presentOffers(
   300,
 ).cards;
 const request = { question: "Compare cards 1 and 2", cards, figures: figures(cards, 300), termsTexts: ["Fixed rate: no penalty for paying early."], history: [], retryReasons: [] };
-const banned = rules.phraseRules.flatMap((r) => r.phrases);
-const wordsIn = (text: string) => banned.filter((p) => new RegExp(`(?<![\\w-])${p}(?![\\w-])`, "i").test(text));
+
+/**
+ * Words the guard would block in this text, found by the guard itself. Only words count: the
+ * prompt's own rule numbers and placeholders aren't text the model is asked to copy.
+ */
+function guardedWords(text: string): string[] {
+  return guard({ answer: text, say: "" }, { figures: {}, promoOnScreen: true })
+    .failures.filter((f) => f.reason !== "placeholder not on this screen" && /[a-z]/i.test(f.quote))
+    .map((f) => f.quote);
+}
 
 describe("explain prompt", () => {
-  // ISS-1: found by the first live eval run; the prompt's own words ("approved terms",
-  // numbered cards) led the model to write words the guard then blocked.
-  it("never uses a word the guard blocks, outside the rule that lists them", () => {
-    const systemWithoutBannedList = EXPLAIN_SYSTEM.split("\n").filter((line) => !line.startsWith("6.")).join("\n");
+  // ISS-1: found by the first live eval run; the prompt's own words ("approved terms", card
+  // numbers, counts) led the model to write words the guard blocks. Prompt check; the live
+  // re-run (docs/EVALS.md, run 2) is the regression evidence.
+  it("ISS-1: uses no word the guard blocks, apart from the rules that list them", () => {
+    const listsRemoved = EXPLAIN_SYSTEM.replace(NUMBER_WORDS.join(", "), "")
+      .replace(rules.phraseRules.flatMap((r) => r.phrases).map((p) => `"${p}"`).join(", "), "")
+      .replace(/"\$" and "%"/, "");
+    const cardHeader = explainPrompt(request).split("\n\n")[0]!;
 
-    expect(wordsIn(systemWithoutBannedList)).toEqual([]);
-    expect(wordsIn(explainPrompt(request))).toEqual([]);
+    expect(guardedWords(listsRemoved)).toEqual([]);
+    expect(guardedWords(cardHeader)).toEqual([]);
   });
 
-  it("lists cards by name, without numbers the model would copy", () => {
-    const cardList = explainPrompt(request).split("\n\n")[0]!;
-
-    expect(cardList).not.toMatch(/\d/);
-  });
-
-  it("tells the model to name offers instead of numbering or counting them", () => {
+  it("ISS-1: tells the model to name offers instead of numbering or counting them", () => {
     expect(EXPLAIN_SYSTEM).toContain("Refer to offers by their names");
   });
 
-  // ISS-5: found by the first live eval run; "costs more overall than a shorter term" wasn't
-  // true of the shorter promo, which costs more.
-  it("tells the model to compare named offers, not to generalise about terms", () => {
+  // ISS-5: found by the first live eval run. Prompt check; run 2 is the regression evidence.
+  it("ISS-5: tells the model to compare named offers, not to generalise about terms", () => {
     expect(EXPLAIN_SYSTEM).toContain("Compare specific offers by name");
   });
 });
 
 describe("meaning check prompt", () => {
-  // ISS-2: found by the first live eval run; the meaning check failed "no penalty for paying
-  // early" as unsupported, a factual call outside its job (it never sees the terms text).
-  it("judges only decisions, steering, marketing and advice, not factual accuracy", () => {
-    expect(MEANING_CHECK_SYSTEM).toContain("Don't judge whether facts are accurate");
+  // ISS-2, corrected after the MR 8 spec review: the first fix told the meaning check to ignore
+  // accuracy, leaving no runtime check against misleading claims. It now gets the official
+  // terms and what each figure means, and fails drafts that contradict them.
+  it("ISS-2: fails drafts that contradict the terms or misdescribe a figure, not wording style", () => {
+    expect(MEANING_CHECK_SYSTEM).toContain("contradicts the official terms or describes a figure as something it isn't");
+    expect(MEANING_CHECK_SYSTEM).not.toContain("Don't judge whether facts are accurate");
+  });
+
+  it("ISS-2: gives the check the official terms and what each figure means", () => {
+    const prompt = meaningCheckPrompt({
+      draft: { answer: "If not, {{promo.cliff}} is added.", say: "" },
+      termsTexts: ["Deferred interest: built-up interest is added if not paid off."],
+      figures: figures(cards, 300),
+    });
+
+    expect(prompt).toContain("Deferred interest: built-up interest is added if not paid off.");
+    expect(prompt).toContain("{{promo.cliff}} = deferred interest added if not paid off in time (the cliff)");
   });
 });

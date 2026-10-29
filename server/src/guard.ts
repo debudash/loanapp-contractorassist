@@ -40,20 +40,28 @@ export function guard(draft: Draft, screen: Screen): { pass: boolean; failures: 
   const failures = [
     ...[draft.answer, draft.say].flatMap((text) => [...numberFidelity(text, screen), ...phrases(text, screen)]),
     ...spokenPayments(draft.say, screen),
-    ...roundedInAnswer(draft.answer),
+    ...roundedFigures(draft),
   ];
   return { pass: failures.length === 0, failures };
 }
 
 /**
- * G-1: rounded figures exist for the line said aloud; the answer the contractor reads uses
- * exact figures. ISS-4: "how much in total?" was answered with "about $69,000" instead of
- * the exact total on the card, so a rounded placeholder in the answer is rejected.
+ * G-1 for rounded figures ("about $24,000"), one failure per placeholder:
+ * - ISS-4: they exist for the line said aloud; the answer the contractor reads uses exact
+ *   figures. "How much in total?" was answered with "about $69,000" instead of the card's total.
+ * - ISS-3: they already start with "about", so "about {{x.rounded}}" rendered "about about".
  */
-function roundedInAnswer(answer: string): Failure[] {
-  return placeholdersIn(answer)
-    .filter(({ name }) => name.endsWith(".rounded"))
-    .map(({ placeholder: quote }) => ({ rule: "G-1" as const, reason: "rounded figure outside the spoken line", quote }));
+function roundedFigures(draft: Draft): Failure[] {
+  const failures: Failure[] = [];
+  for (const { placeholder: quote, name } of placeholdersIn(draft.answer)) {
+    if (name.endsWith(".rounded")) failures.push({ rule: "G-1", reason: "rounded figure outside the spoken line", quote });
+  }
+  for (const { placeholder, name } of placeholdersIn(draft.say)) {
+    if (!name.endsWith(".rounded")) continue;
+    const doubled = new RegExp(`\\babout\\s+${placeholder.replace(/[.{}]/g, "\\$&")}`, "i").exec(draft.say);
+    if (doubled) failures.push({ rule: "G-1", reason: "rounded figure already says 'about'", quote: doubled[0] });
+  }
+  return failures;
 }
 
 // Number words the model might use to slip a figure past the digit check.
@@ -79,13 +87,6 @@ function numberFidelity(text: string, screen: Screen): Failure[] {
     if (!Object.hasOwn(screen.figures, name)) {
       failures.push({ rule: "G-1", reason: "placeholder not on this screen", quote: placeholder });
     }
-  }
-  // ISS-3: rounded figures already read "about $24,000", so "about {{x.rounded}}" rendered
-  // "about about $24,000". The draft is rejected so the retry drops the extra word.
-  for (const { placeholder, name } of placeholdersIn(text)) {
-    if (!name.endsWith(".rounded")) continue;
-    const doubled = new RegExp(`\\babout\\s+${placeholder.replace(/[.{}]/g, "\\$&")}`, "i").exec(text);
-    if (doubled) failures.push({ rule: "G-1", reason: "rounded figure already says 'about'", quote: doubled[0] });
   }
   const prose = withoutPlaceholders(text);
   // Any brace left once well-formed placeholders are removed would show on screen.

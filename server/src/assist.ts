@@ -120,7 +120,10 @@ export async function assist(
       // Recorded before the meaning check, so a deadline during the check keeps the draft.
       const attempt: Attempt = { draft, guardResult: guard(draft, screen), verdict: null };
       attempts.push(attempt);
-      if (attempt.guardResult.pass) attempt.verdict = spend("check", await deps.model.meaningCheck(draft, deadline.signal));
+      if (attempt.guardResult.pass) {
+        const check = { draft, termsTexts: screen.termsTexts, figures: screen.figures };
+        attempt.verdict = spend("check", await deps.model.meaningCheck(check, deadline.signal));
+      }
       if (attempt.guardResult.pass && attempt.verdict?.pass) {
         const answer = render(attempt.draft.answer, screen.figures);
         const say = render(attempt.draft.say, screen.figures);

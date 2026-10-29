@@ -84,6 +84,9 @@ describe("assist: questions about the offers (lane 2)", () => {
       answer: "Only the 20-year option is under her budget, at $289.31.",
       say: "The 20-year plan is $289.31 a month at 9.99% APR.",
     });
+    // The meaning check gets the official terms and the figures, so it can catch misleading claims.
+    expect(model.checkRequests[0]).toMatchObject({ draft: goodDraft, figures: { "lowest_monthly.monthly": "$289.31" } });
+    expect(model.checkRequests[0]!.termsTexts.length).toBeGreaterThan(0);
     const request = model.explainRequests[0]!;
     expect(request.figures).toMatchObject({ "lowest_monthly.monthly": "$289.31", budget: "$300.00" });
     expect(request.termsTexts.some((t) => t.startsWith("Deferred interest"))).toBe(true);

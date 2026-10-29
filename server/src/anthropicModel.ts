@@ -5,8 +5,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import type { Draft } from "./guard.js";
-import { type ExplainRequest, type MeaningVerdict, type Model, ModelUnavailable, type Understanding, type Usage } from "./model.js";
-import { EXPLAIN_SYSTEM, explainPrompt, MEANING_CHECK_SYSTEM, UNDERSTAND_SYSTEM } from "./prompts.js";
+import { type ExplainRequest, type MeaningCheckRequest, type MeaningVerdict, type Model, ModelUnavailable, type Understanding, type Usage } from "./model.js";
+import { EXPLAIN_SYSTEM, explainPrompt, MEANING_CHECK_SYSTEM, meaningCheckPrompt, UNDERSTAND_SYSTEM } from "./prompts.js";
 
 const UnderstandingSchema = z.object({
   kind: z.enum(["inputs", "question", "credit_decision", "off_topic"]),
@@ -36,9 +36,8 @@ export class AnthropicModel implements Model {
     return this.call(this.names.explain, EXPLAIN_SYSTEM, explainPrompt(request), DraftSchema, 2_000, signal);
   }
 
-  meaningCheck(draft: Draft, signal: AbortSignal): Promise<{ value: MeaningVerdict; usage: Usage }> {
-    const content = `answer: ${draft.answer}\nsay: ${draft.say}`;
-    return this.call(this.names.check, MEANING_CHECK_SYSTEM, content, VerdictSchema, 2_048, signal);
+  meaningCheck(request: MeaningCheckRequest, signal: AbortSignal): Promise<{ value: MeaningVerdict; usage: Usage }> {
+    return this.call(this.names.check, MEANING_CHECK_SYSTEM, meaningCheckPrompt(request), VerdictSchema, 2_048, signal);
   }
 
   /**
