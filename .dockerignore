@@ -1,0 +1,11 @@
+# Keeps secrets and local output out of the root image's build context (Dockerfile, fly.toml).
+.env
+.git
+**/node_modules
+**/dist
+data
+docs
+redteam
+server/evals
+server/test
+web/test

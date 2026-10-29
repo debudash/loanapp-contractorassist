@@ -19,6 +19,7 @@ const app = createApp({
   model: new AnthropicModel(),
   escalate: escalateToComplianceStub,
   limits: limitsFromEnv(process.env),
+  staticDir: process.env.STATIC_DIR,
 });
 
 app.listen(port, () => console.log(`Assistant API on :${port}`));

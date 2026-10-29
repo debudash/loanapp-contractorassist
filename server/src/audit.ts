@@ -206,6 +206,12 @@ export class AuditStore {
     return Number(row?.n ?? 0);
   }
 
+  /** Turns across all contractors since the given time, not counting refused ones: the public deployment's cap. */
+  allTurnsSince(sinceIso: string): number {
+    const row = this.one("SELECT COUNT(*) AS n FROM assistant_turn WHERE created_at >= ? AND outcome <> 'rate_limited'", sinceIso);
+    return Number(row?.n ?? 0);
+  }
+
   /** Records a question refused by the rate limit, with the offers that were on screen (FR-14). */
   recordRateLimited(fields: Pick<TurnRecord, "sessionId" | "contractorId" | "catalogVersion" | "message">): void {
     const offerSet = this.latestOfferSet(fields.sessionId);

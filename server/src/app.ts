@@ -1,6 +1,7 @@
 // HTTP routes. Thin: each one checks identity and input, calls the quote engine
 // or an adapter, records what happened, and returns the result.
 import { randomUUID } from "node:crypto";
+import { join } from "node:path";
 import express, { type Request, type Response } from "express";
 import { type AssistDeps, assist } from "./assist.js";
 import type { AuditStore } from "./audit.js";
@@ -16,20 +17,28 @@ export interface Deps {
   model: Model;
   escalate: AssistDeps["escalate"];
   deadlineMs?: AssistDeps["deadlineMs"];
-  /** Questions per contractor (FR-17). */
-  limits?: { perHour: number; perDay: number };
+  /** Questions per contractor (FR-17), and optionally one daily cap across all contractors. */
+  limits?: { perHour: number; perDay: number; allPerDay?: number };
+  /** The built web app, served by this service in the public deployment; nginx serves it locally. */
+  staticDir?: string;
 }
 
 export const DEFAULT_LIMITS = { perHour: 30, perDay: 200 };
 
 /**
  * Limits from RATE_LIMIT_PER_HOUR and RATE_LIMIT_PER_DAY, for a test instance such as the red-team
- * run's; anything missing or not a positive whole number keeps the default.
+ * run's; anything missing or not a positive whole number keeps the default. RATE_LIMIT_ALL_PER_DAY
+ * caps questions across all contractors (the public deployment); without it there is no such cap.
  */
 export function limitsFromEnv(env: Record<string, string | undefined>): NonNullable<Deps["limits"]> {
-  const read = (value: string | undefined, fallback: number) =>
+  const read = (value: string | undefined, fallback?: number) =>
     value !== undefined && /^[1-9]\d*$/.test(value) ? Number(value) : fallback;
-  return { perHour: read(env.RATE_LIMIT_PER_HOUR, DEFAULT_LIMITS.perHour), perDay: read(env.RATE_LIMIT_PER_DAY, DEFAULT_LIMITS.perDay) };
+  const allPerDay = read(env.RATE_LIMIT_ALL_PER_DAY);
+  return {
+    perHour: read(env.RATE_LIMIT_PER_HOUR, DEFAULT_LIMITS.perHour)!,
+    perDay: read(env.RATE_LIMIT_PER_DAY, DEFAULT_LIMITS.perDay)!,
+    ...(allPerDay !== undefined && { allPerDay }),
+  };
 }
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_NAME_LENGTH = 100;
@@ -128,12 +137,21 @@ export function createApp(deps: Deps) {
   });
 
   // FR-17: questions per contractor, counting those still in flight so parallel requests can't slip past.
+  // In public, the contractor header is whatever the caller sends, so a cap across everyone bounds spend.
   const inFlight = new Map<string, number>();
-  const rateLimited = (contractorId: string): boolean => {
-    const limits = deps.limits ?? DEFAULT_LIMITS;
+  const limitReached = (contractorId: string): string | undefined => {
+    const limits: NonNullable<Deps["limits"]> = deps.limits ?? DEFAULT_LIMITS;
+    const ago = (ms: number) => new Date(Date.now() - ms).toISOString();
+    const allPending = [...inFlight.values()].reduce((sum, n) => sum + n, 0);
+    if (limits.allPerDay !== undefined && deps.audit.allTurnsSince(ago(DAY_MS)) + allPending >= limits.allPerDay) {
+      return "The assistant has reached today's limit for this demo. The cards and figures still work.";
+    }
     const pending = inFlight.get(contractorId) ?? 0;
-    const since = (ms: number) => deps.audit.turnsSince(contractorId, new Date(Date.now() - ms).toISOString());
-    return since(HOUR_MS) + pending >= limits.perHour || since(DAY_MS) + pending >= limits.perDay;
+    const since = (ms: number) => deps.audit.turnsSince(contractorId, ago(ms));
+    if (since(HOUR_MS) + pending >= limits.perHour || since(DAY_MS) + pending >= limits.perDay) {
+      return "Question limit reached for now. The cards and figures still work.";
+    }
+    return undefined;
   };
 
   // FR-9 to FR-14: the assistant panel. Length-capped and rate-limited before any model call (FR-16, FR-17).
@@ -156,9 +174,10 @@ export function createApp(deps: Deps) {
       return;
     }
     const contractorId: string = res.locals.contractorId;
-    if (rateLimited(contractorId)) {
+    const limited = limitReached(contractorId);
+    if (limited) {
       deps.audit.recordRateLimited({ sessionId, contractorId, catalogVersion: deps.catalog.version, message });
-      res.status(429).json({ error: "rate_limited", message: "Question limit reached for now. The cards and figures still work." });
+      res.status(429).json({ error: "rate_limited", message: limited });
       return;
     }
     inFlight.set(contractorId, (inFlight.get(contractorId) ?? 0) + 1);
@@ -193,6 +212,13 @@ export function createApp(deps: Deps) {
   });
 
   app.use("/api", api);
+
+  // The public deployment serves the built web app too; any other page path gets index.html.
+  if (deps.staticDir) {
+    const dir = deps.staticDir;
+    app.use(express.static(dir));
+    app.get(/^\/(?!api\/).*/, (_req, res) => res.sendFile(join(dir, "index.html")));
+  }
 
   // Errors answer in JSON like the rest of the API, never Express's HTML page.
   app.use((error: { type?: string }, _req: Request, res: Response, _next: express.NextFunction) => {
