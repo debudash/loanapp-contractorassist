@@ -1,56 +1,65 @@
 import { useState } from "react";
+import { fill } from "../format";
 
-// Demo stand-ins for a real homeowner; the mock decision engine has one fixture per path.
-const DEMO_HOMEOWNERS = [
-  ["moderate", "Homeowner A (moderate credit)"],
-  ["strong", "Homeowner B (strong credit)"],
-  ["no_offers", "Homeowner C (no offers)"],
+// Demo stand-ins for a real application; the mock decision engine has one fixture per path.
+const TEST_PROFILES = [
+  ["moderate", "Moderate credit"],
+  ["strong", "Strong credit"],
+  ["no_offers", "No offers"],
 ] as const;
 
 interface Props {
   disabled: boolean;
-  /** Compliance-owned consent wording; its rules version is recorded with the consent. */
+  /** The homeowner's name; a soft check needs one. */
+  homeowner: string;
+  /** Compliance-owned wording: what to ask the homeowner, and the consent itself (its rules version is recorded). */
+  askText: string;
   consentText: string;
   onRun: (applicantRef: string) => void;
 }
 
-/** FR-4: every soft check needs its own consent tick. It resets after each run and on a new homeowner. */
-export function SoftCheck({ disabled, consentText, onRun }: Props) {
+/** Step 3, FR-4: every soft check needs its own consent tick. It resets after each run and on a new quote. */
+export function SoftCheck({ disabled, homeowner, askText, consentText, onRun }: Props) {
   const [consent, setConsent] = useState(false);
-  const [applicant, setApplicant] = useState<string>(DEMO_HOMEOWNERS[0][0]);
+  const [profile, setProfile] = useState<string>(TEST_PROFILES[0][0]);
   return (
-    <section className="panel soft-check" aria-label="Real offers">
-      <h2>Real offers</h2>
-      <label>
-        Demo homeowner
-        <select
-          value={applicant}
-          onChange={(e) => {
-            setApplicant(e.target.value);
-            setConsent(false);
-          }}
-        >
-          {DEMO_HOMEOWNERS.map(([ref, name]) => (
-            <option key={ref} value={ref}>
-              {name}
-            </option>
-          ))}
-        </select>
-      </label>
+    <section className="panel soft-check" aria-label="Soft check">
+      <p>{fill(askText, { homeowner: homeowner || "the homeowner" })}</p>
       <label className="consent">
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
         {consentText}
       </label>
+      {!homeowner && <p className="hint">Add the homeowner's name in step 1 first.</p>}
       <button
         type="button"
-        disabled={!consent || disabled}
+        disabled={!consent || !homeowner || disabled}
         onClick={() => {
           setConsent(false);
-          onRun(applicant);
+          onRun(profile);
         }}
       >
         Run soft check
       </button>
+      <div className="demo-only">
+        <span className="demo-tag">Demo only</span>
+        <label>
+          Test credit profile
+          <select
+            value={profile}
+            onChange={(e) => {
+              setProfile(e.target.value);
+              setConsent(false);
+            }}
+          >
+            {TEST_PROFILES.map(([ref, name]) => (
+              <option key={ref} value={ref}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="fine">The mock lender returns a fixed result for each profile. In the portal, the check uses the homeowner's application.</p>
+      </div>
     </section>
   );
 }

@@ -300,3 +300,4 @@ Built in vertical slices, test-first. Each slice is a GitLab merge request: buil
 | 6 | React UI: inputs panel, ballpark, soft check, cards, assistant panel, compliance view | Component and App tests plus a browser smoke run | Done (MR 5) |
 | 7 | Evals and grounding against the real models | `docker compose run --rm evals` | Done (MR 6); live run needs an API key |
 | 8 | Docker run, README, design doc, evals report | `docker compose up` | Done (MR 7) |
+| 9 | Guided screen (homeowner name, four steps, next line, starter questions) and the compliance page (checklist and timeline) | App and audit-summary tests, the name on the consent route, a browser run, eval run 5 | Done (MR 9) |

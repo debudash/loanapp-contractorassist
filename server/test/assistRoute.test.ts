@@ -73,7 +73,7 @@ describe("POST /api/assist", () => {
   it("records a rate-limited turn with the offers on screen (FR-14)", async () => {
     const { app, sessionId, ask, trail } = await setup({ limits: { perHour: 0, perDay: 0 } });
     await request(app).post("/api/offers").set(asSummit)
-      .send({ sessionId, amount: 30_000, applicantRef: "moderate", consent: { given: true, textVersion: "v1" } });
+      .send({ sessionId, amount: 30_000, applicantRef: "moderate", consent: { given: true, textVersion: "v1", homeownerName: "Maria Lopez" } });
 
     await ask();
 
@@ -132,7 +132,7 @@ describe("POST /api/offers wording", () => {
     const { app, sessionId } = await setup();
 
     const res = await request(app).post("/api/offers").set(asSummit)
-      .send({ sessionId, amount: 30_000, applicantRef: "no_offers", consent: { given: true, textVersion: "v1" } });
+      .send({ sessionId, amount: 30_000, applicantRef: "no_offers", consent: { given: true, textVersion: "v1", homeownerName: "Maria Lopez" } });
 
     expect(res.body.message).toBe(rules.fixedWording.noOffers);
   });
@@ -152,7 +152,7 @@ describe("offers on screen", () => {
   it("explains only the offer set the screen says it shows; none after the inputs change", async () => {
     const { app, model, sessionId } = await setup();
     const offers = await request(app).post("/api/offers").set(asSummit)
-      .send({ sessionId, amount: 30_000, applicantRef: "moderate", consent: { given: true, textVersion: "v1" } });
+      .send({ sessionId, amount: 30_000, applicantRef: "moderate", consent: { given: true, textVersion: "v1", homeownerName: "Maria Lopez" } });
     model.understandings.push({ kind: "question" }, { kind: "question" });
     model.drafts.push({ answer: "Here are the options.", say: "Here are the options." }, { answer: "Enter the amount first.", say: "" });
     model.verdicts.push({ pass: true, quote: null, reason: null }, { pass: true, quote: null, reason: null });

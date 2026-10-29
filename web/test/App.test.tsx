@@ -9,7 +9,9 @@ const wording = {
     consent: "The homeowner has agreed to a soft credit check.",
     ballparkFinePrint: "Estimates from {aprMin}%–{aprMax}% APR.",
     promoCliff: "Pay off {payoff} within {months} months. If not, {cliff} of deferred interest is added.",
-    noBudgetHint: "Ask her about a budget.",
+    noBudgetHint: "Ask the homeowner about a budget.",
+    softCheckAsk: "Ask {homeowner} for permission to run a soft credit check.",
+    ballparkNote: "Estimate only.",
   },
 };
 const card = {
@@ -30,6 +32,7 @@ function fakeApi() {
 }
 
 async function runSoftCheck() {
+  fireEvent.change(screen.getByLabelText("Homeowner name"), { target: { value: "Maria Lopez" } });
   fireEvent.click(await screen.findByRole("checkbox"));
   fireEvent.click(screen.getByRole("button", { name: "Run soft check" }));
   await screen.findByText("$379.86");
@@ -60,5 +63,89 @@ describe("App", () => {
 
     expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(false);
     expect((screen.getByRole("button", { name: "Run soft check" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  // Slice 9: found in the UI walkthrough; nothing said who the quote was for.
+  it("needs the homeowner's name for a soft check, and sends it with the consent", async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole("checkbox"));
+    const run = screen.getByRole("button", { name: "Run soft check" }) as HTMLButtonElement;
+    expect(run.disabled).toBe(true);
+
+    fireEvent.change(screen.getByLabelText("Homeowner name"), { target: { value: "Maria Lopez" } });
+    expect(screen.getByText("Ask Maria Lopez for permission to run a soft credit check.")).toBeDefined();
+    fireEvent.click(run);
+
+    await screen.findByText("$379.86");
+    const call = vi.mocked(fetch).mock.calls.find(([url]) => String(url).endsWith("/offers"))!;
+    expect(JSON.parse(String(call[1]!.body)).consent).toMatchObject({ given: true, homeownerName: "Maria Lopez" });
+  });
+
+  // MR 9 spec review: offers stayed on screen under a new name, though the consent was another homeowner's.
+  it("clears the offer cards when the homeowner's name changes", async () => {
+    render(<App />);
+    await runSoftCheck();
+
+    fireEvent.change(screen.getByLabelText("Homeowner name"), { target: { value: "Bob Smith" } });
+
+    await waitFor(() => expect(screen.queryByText("$379.86")).toBeNull());
+  });
+
+  // MR 9 spec review: step 3 was never marked current while the contractor was on it.
+  it("marks the soft check as the current step once the ballpark shows", async () => {
+    render(<App />);
+
+    await waitFor(() => expect(screen.getByRole("region", { name: "Real offers" }).getAttribute("aria-current")).toBe("step"));
+    expect(screen.getByRole("region", { name: "Ballpark" }).getAttribute("aria-current")).toBeNull();
+  });
+
+  // Slice 9: found in the UI walkthrough; nothing said what to do next.
+  it("says what to do next at each step", async () => {
+    render(<App />);
+    fireEvent.change(screen.getByLabelText("Homeowner name"), { target: { value: "Maria Lopez" } });
+    expect(await screen.findByText(/Next: share the ballpark with Maria Lopez/)).toBeDefined();
+
+    await runSoftCheck();
+
+    expect(screen.getByText(/Next: walk Maria Lopez through the offers/)).toBeDefined();
+  });
+
+  // Slice 9: found in the UI walkthrough; the compliance view sat under the contractor's cards.
+  it("opens the compliance view as its own page, and goes back to the same quote", async () => {
+    render(<App />);
+    await runSoftCheck();
+
+    fireEvent.click(screen.getByRole("button", { name: "Compliance view" }));
+    expect(await screen.findByRole("heading", { name: "Compliance view" })).toBeDefined();
+    expect(screen.queryByText("$379.86")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Back to the quote" }));
+    expect(screen.getByText("$379.86")).toBeDefined();
+  });
+
+  // Slice 9: found in the UI walkthrough; there was no way to start over for the next homeowner.
+  it("starts a new quote with a new session and nothing carried over", async () => {
+    render(<App />);
+    await runSoftCheck();
+
+    fireEvent.click(screen.getByRole("button", { name: "Start new quote" }));
+
+    await waitFor(() => expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith("/sessions"))).toHaveLength(2));
+    expect(screen.queryByText("$379.86")).toBeNull();
+    expect((screen.getByLabelText("Homeowner name") as HTMLInputElement).value).toBe("");
+  });
+
+  // Slice 9: found in the UI walkthrough; the assistant opened to an empty box.
+  it("offers starter questions that match the screen, and asks one on a tap", async () => {
+    render(<App />);
+    await runSoftCheck();
+
+    fireEvent.click(screen.getByRole("button", { name: "Need help explaining? Ask the assistant" }));
+    fireEvent.click(screen.getByRole("button", { name: "What does the finance charge mean?" }));
+
+    await waitFor(() => {
+      const call = vi.mocked(fetch).mock.calls.find(([url]) => String(url).endsWith("/assist"));
+      expect(JSON.parse(String(call![1]!.body)).message).toBe("What does the finance charge mean?");
+    });
   });
 });

@@ -27,4 +27,20 @@ describe("audit trail", () => {
 
     expect(() => raw.exec(sql)).toThrow(/append-only/);
   });
+
+  // Slice 9: audit databases made before the homeowner's name was recorded still open and record it.
+  it("adds the homeowner name to a consent table made before it existed", () => {
+    const path = join(mkdtempSync(join(tmpdir(), "audit-")), "old.db");
+    const old = new DatabaseSync(path);
+    old.exec(`CREATE TABLE consent (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT NOT NULL, kind TEXT NOT NULL,
+      consent_text_version TEXT NOT NULL, given_at TEXT NOT NULL)`);
+    old.close();
+
+    const audit = new AuditStore(path);
+    audit.createSession("s1", "c_summit", "cat-2026-10");
+    audit.recordConsent("s1", "v1", "Maria Lopez");
+
+    expect(audit.sessionTrail("s1").consents[0]).toMatchObject({ homeownerName: "Maria Lopez" });
+  });
 });

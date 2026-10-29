@@ -29,8 +29,8 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
 - **FR-3** Ballpark results render without any LLM call and within 1 s of input.
 
 **Offers**
-- **FR-4** The soft-check button stays disabled until a consent box is ticked. The audit log records consent with a timestamp and the contractor's ID.
-- **FR-5** The mocked engine returns an offer set chosen by a fixture homeowner (strong, moderate, no offers).
+- **FR-4** The soft-check button stays disabled until a consent box is ticked and the homeowner's name is entered. The audit log records consent with a timestamp, the contractor's ID and the homeowner's name.
+- **FR-5** The mocked engine returns an offer set chosen by a test credit profile (strong, moderate, no offers), picked in a box marked "Demo only".
 - **FR-6** Show at most 3 offer cards, chosen by a fixed rule: **Lowest monthly**, **Lowest total cost** and **Promo** (if any; otherwise the next lowest total cost). Each card is labelled by what it's best at and never as "recommended". The cards always appear in the same order, **Lowest total cost, Lowest monthly, Promo**, with no visual emphasis except the homeowner's own budget label (FR-8). Order is itself a nudge, so it's fixed and documented. Labels must always be true: if one offer has both the lowest total cost and the lowest monthly payment, its card says so ("Lowest total and monthly"), and the free slot goes to the next lowest total cost. Promos compete only for the promo slot, never for lowest monthly. A "See all N offers" link always shows the full set, with the same disclosures.
 - **FR-7** Every card displays the monthly payment, APR, term, number of payments, amount financed, finance charge and total of payments. A promo card adds the conditions (pay off the amount financed within the promo months), plus a **cliff line**: the deferred interest that is added if the balance isn't paid off in time.
 - **FR-8** Given a budget, each offer card shows *fits budget* (and by how much it's under) or *over by $X*. Budget is optional. Without one, the cards leave out the fit labels, and the assistant suggests the contractor ask: "What monthly amount would feel comfortable?" "As low as possible" is never treated as a budget, because that would push the longest, most expensive term.
@@ -74,7 +74,8 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
   - the model's raw text
   - each guard result (pass or fail, with the reason)
   - the rendered text
-- **FR-15** A "Compliance view" toggle shows that record for each turn.
+- **FR-15** A compliance page, separate from the contractor's screen, shows one quote: a short list of checks (consent before every soft check, every answer shown passed every check, drafts blocked and tickets raised), then a timeline in plain words. Each draft shows which checks passed or failed and why; the raw record is folded underneath.
+- **FR-19** The contractor's screen is four numbered steps (project, ballpark, real offers, offers) with one "Next" line saying what to do now, headed by who the quote is for. The assistant offers starter questions that fit what's on screen.
 
 **Cost limits (apply to every flow that calls a model)**
 - **FR-16** Each question has a fixed cost ceiling: a fixed pipeline with no agent loop, at most five model calls (understand, then up to two explain-and-check rounds), capped output per call, no background retries, messages up to 500 characters, and only the last 4 answers about the same offers sent. One 20-second deadline covers the whole question and cancels any call still running. Typical cost is about 1¢; worst case about 6¢ (estimates).
@@ -86,7 +87,7 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
 - **NG-1** Never estimates, predicts or explains an approval, decline or credit tier. Questions like "will she qualify?" are redirected to the soft check.
 - **NG-2** Never explains why an applicant received no offers. The UI says the lender will send the homeowner a notice, which is the lender's adverse-action duty, not the assistant's.
 - **NG-3** Never ranks offers as "best for you" or recommends one. It only describes trade-offs against the homeowner's stated budget.
-- **NG-4** Never collects homeowner data before consent. The ballpark takes none.
+- **NG-4** Never sends homeowner data anywhere before consent. The ballpark takes none. The name typed in step 1 stays in the browser until consent is recorded and is sent only with it; the name field never reaches the model or the credit engine (mock). Anything the contractor types into the assistant goes to the model as written.
 - **NG-5** Never answers outside financing for this project (tax advice, tax-credit eligibility, legal questions, other products). It says so and suggests who to ask.
 - **NG-6** Not built: document extraction, Plaid income verification, submitting the application, voice. These are covered in the design doc as later phases.
 

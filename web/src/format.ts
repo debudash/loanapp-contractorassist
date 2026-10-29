@@ -8,6 +8,16 @@ export function years(termMonths: number): string {
   return `${termMonths / 12} years`;
 }
 
+/** "roofing" -> "Roofing", "hvac" -> "HVAC". */
+export function projectLabel(projectType: string): string {
+  return projectType === "hvac" ? "HVAC" : projectType[0]!.toUpperCase() + projectType.slice(1);
+}
+
+/** "Maria Lopez's", or "the homeowner's" before a name is given. */
+export function possessive(name: string): string {
+  return name ? `${name}'s` : "the homeowner's";
+}
+
 /** Fills {name} slots in compliance-owned wording with figures from the server. */
 export function fill(template: string, values: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (slot, name: string) => String(values[name] ?? slot));

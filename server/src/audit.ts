@@ -82,6 +82,10 @@ export class AuditStore {
     // recursive_triggers makes INSERT OR REPLACE fire the delete trigger too.
     this.db.exec("PRAGMA foreign_keys = ON; PRAGMA recursive_triggers = ON;");
     this.db.exec(SCHEMA);
+    // Audit databases made before the homeowner's name was kept get the column; old rows stay as they were.
+    if (!this.many("PRAGMA table_info(consent)").some((c) => c.name === "homeowner_name")) {
+      this.db.exec("ALTER TABLE consent ADD COLUMN homeowner_name TEXT");
+    }
   }
 
   createSession(sessionId: string, contractorId: string, catalogVersion: string): void {
@@ -95,10 +99,13 @@ export class AuditStore {
     return this.one("SELECT contractor_id FROM session WHERE id = ?", sessionId)?.contractor_id as string | undefined;
   }
 
-  recordConsent(sessionId: string, consentTextVersion: string): number {
+  /** The homeowner's name is kept here and on screen only; it's never sent to the model. */
+  recordConsent(sessionId: string, consentTextVersion: string, homeownerName: string): number {
     const result = this.db
-      .prepare("INSERT INTO consent (session_id, kind, consent_text_version, given_at) VALUES (?, 'soft_check', ?, ?)")
-      .run(sessionId, consentTextVersion, now());
+      .prepare(
+        "INSERT INTO consent (session_id, kind, consent_text_version, given_at, homeowner_name) VALUES (?, 'soft_check', ?, ?, ?)",
+      )
+      .run(sessionId, consentTextVersion, now(), homeownerName);
     return Number(result.lastInsertRowid);
   }
 

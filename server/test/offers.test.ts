@@ -17,7 +17,7 @@ function setup() {
 
 const asSummit = { "x-contractor-id": "c_summit" };
 const asValley = { "x-contractor-id": "c_valley" };
-const consent = { given: true, textVersion: "soft-check-v1" };
+const consent = { given: true, textVersion: "soft-check-v1", homeownerName: "Maria Lopez" };
 
 async function openSession(app: ReturnType<typeof setup>["app"], as = asSummit): Promise<string> {
   const res = await request(app).post("/api/sessions").set(as);
@@ -63,7 +63,7 @@ describe("POST /api/offers", () => {
 
     const trail = await trailOf(app, sessionId);
     expect(trail.consents).toHaveLength(1);
-    expect(trail.consents[0]).toMatchObject({ kind: "soft_check", consentTextVersion: "soft-check-v1" });
+    expect(trail.consents[0]).toMatchObject({ kind: "soft_check", consentTextVersion: "soft-check-v1", homeownerName: "Maria Lopez" });
     expect(trail.offerSets).toHaveLength(1);
     expect(trail.offerSets[0]).toMatchObject({
       consentId: trail.consents[0].id,
@@ -102,6 +102,25 @@ describe("POST /api/offers", () => {
       totalCount: 0,
     });
   });
+
+  // Slice 9: the consent record says who gave it, so a reviewer can find the quote by homeowner.
+  it.each([{}, { homeownerName: "  " }, { homeownerName: "x".repeat(101) }])(
+    "asks for the homeowner's name before a soft check, and calls and stores nothing: %j",
+    async (name) => {
+      const { app, softCheck } = setup();
+      const sessionId = await openSession(app);
+
+      const res = await request(app)
+        .post("/api/offers")
+        .set(asSummit)
+        .send({ sessionId, amount: 30_000, applicantRef: "moderate", consent: { given: true, textVersion: "soft-check-v1", ...name } });
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "homeowner_name_required" });
+      expect(softCheck).not.toHaveBeenCalled();
+      expect((await trailOf(app, sessionId)).consents).toEqual([]);
+    },
+  );
 
   // Review fix (slice 3, spec S1): found by spec review; a missing applicant showed a false decline notice.
   it("asks for the applicant instead of reporting no offers when none is named", async () => {
