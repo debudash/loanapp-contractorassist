@@ -13,10 +13,10 @@ flowchart LR
   C([Contractor on a tablet<br/>homeowner reading along])
 
   subgraph Portal["Partner portal · React"]
-    IP[Inputs panel]
-    OC[Offer cards]
-    AP[Assistant panel<br/>closed by default]
-    CV[Compliance view]
+    IP[Steps 1-2<br/>project, ballpark]
+    OC[Steps 3-4<br/>soft check, offer cards]
+    AP[Assistant chat<br/>closed by default]
+    CV[Compliance page<br/>back office]
   end
 
   subgraph Svc["Assistant service · Node / TypeScript"]
@@ -68,7 +68,8 @@ Nothing runs on the host: not the app, not the tests, not the evals. One `docker
 |---|---|---|
 | `api` | Express assistant service | `docker compose up` |
 | `web` | React app (Vite build) | `docker compose up` |
-| `test` | Unit and integration tests (Vitest), no API key needed | `docker compose run --rm test` |
+| `test` | Server unit and integration tests (Vitest), no API key needed | `docker compose run --rm test` |
+| `web-test` | Web component and App tests (Vitest) | `docker compose run --rm web-test` |
 | `evals` | Eval suite against the real model | `docker compose run --rm evals` |
 
 The only thing needed on the host is Docker, plus an `ANTHROPIC_API_KEY` in `.env` for the app and evals.
@@ -79,12 +80,13 @@ Each module is one file with one job. **Bold** interfaces are the test seams.
 
 ```mermaid
 flowchart TB
-  subgraph routes["routes.ts · HTTP"]
+  subgraph routes["app.ts · HTTP"]
     R1["POST /ballpark"]
     R2["POST /offers"]
     R3["POST /assist"]
     R0["POST /sessions"]
     R4["GET /sessions/:id/audit"]
+    R5["GET /wording"]
   end
 
   subgraph quote["Quote engine · pure functions"]
@@ -96,13 +98,13 @@ flowchart TB
 
   subgraph assist["Assist pipeline"]
     AS["assist()"]
-    UN["understand.ts · Haiku"]
+    UN["understand · Haiku"]
     IC["checkInputs() · G-5"]
-    EX["explain.ts · Sonnet"]
+    EX["explain · Sonnet"]
     GU["guard() · G-1 to G-4"]
     MC["meaningCheck() · Haiku"]
     RE["render()"]
-    FB["fallback.ts"]
+    FB["standard explanation"]
   end
 
   subgraph adapters["Adapters · interfaces with mock implementations"]
@@ -120,6 +122,7 @@ flowchart TB
   R2 --> QP
   R3 --> AS
   R4 --> AL
+  R5 --> RULES
   QB --> LC
   QB --> AM
   QP --> AM
@@ -213,17 +216,18 @@ sequenceDiagram
   participant Q as Quote engine
   participant AL as AuditStore
 
-  C->>UI: Ticks "homeowner consents to a soft check"
+  C->>UI: Picks the credit mock profile (prototype only)
+  C->>UI: Asks permission, ticks "the homeowner has agreed to a soft credit check"
   C->>UI: Run soft check
-  UI->>S: POST /offers (consent: true)
-  alt consent missing
+  UI->>S: POST /offers (consent: wording version, homeowner name)
+  alt consent or name missing
     S-->>UI: 400, nothing called
   else consent given
-    S->>AL: recordConsent(session, wording version)
-    S->>DE: softCheck(applicant, amount)
+    S->>AL: recordConsent(session, wording version, homeowner name)
+    S->>DE: softCheck(applicant, amount), never the name
     DE-->>S: Offers, or none
     alt no offers
-      S-->>UI: "The lender will send the homeowner a notice"
+      S-->>UI: No-offers notice, shown in step 4
     else offers
       S->>Q: presentOffers(offers, budget)
       Q-->>S: 3 cards in fixed order, disclosures, cliff, fit labels
@@ -237,7 +241,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   actor C as Contractor
-  participant UI as Assistant panel
+  participant UI as Assistant chat
   participant S as assist()
   participant M as Model
   participant G as Guard
@@ -301,3 +305,12 @@ Built in vertical slices, test-first. Each slice is a GitLab merge request: buil
 | 7 | Evals and grounding against the real models | `docker compose run --rm evals` | Done (MR 6); live run needs an API key |
 | 8 | Docker run, README, design doc, evals report | `docker compose up` | Done (MR 7) |
 | 9 | Guided screen (homeowner name, four steps, next line, starter questions) and the compliance page (checklist and timeline) | App and audit-summary tests, the name on the consent route, a browser run, eval run 5 | Done (MR 9) |
+| 10 | Fixes ISS-7, ISS-8, ISS-9 (figure meanings in the explain prompt, named offers, rounded total difference) | `prompts.test.ts`, `quote.test.ts`, eval run 6 | Done (MR 10) |
+| 11 | Eval trace: every question keeps its drafts, checks and block reasons; `EVAL_SET` runs one case set | `graders.test.ts`, eval run 7 | Done (MR 11) |
+| 12 | Two fixed columns (steps, 360px assistant rail); the assistant as a chat with prompt bubbles | App and AssistantPanel tests | Done (MR 12) |
+| 13 | Fix ISS-10 (no promises in the spoken line; explain@10, meaning@7) | `prompts.test.ts`; eval run 8 (MR 16) | Done (MR 13) |
+| 14 | Colour of the "Next" line | None (styles only) | Done (MR 14) |
+| 15 | Fix ISS-11 (switching the credit mock profile clears the result); step 3 in the order it's done | `App.test.tsx` | Done (MR 15) |
+| 16 | Eval run 8 record | `docs/EVALS.md`, `docs/eval-runs/run-8.md` | Done (MR 16) |
+| 17 | No-offers result shown in step 4, in compliance-owned wording (`uiWording.noOffersNotice`) | App test, offers route tests | Done (MR 17) |
+| 18 | "Credit mock profile" label; decline fixture "No offers (decline scenario)" | `App.test.tsx` | Done (MR 18) |

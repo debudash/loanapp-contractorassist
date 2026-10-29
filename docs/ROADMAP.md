@@ -15,7 +15,7 @@ Only what a pilot needs to run on real services with real contractors.
 | Replace the mocks with adapters to the real loan catalog, contractor profile and credit decision engine (`server/src/ports.ts`) | A pilot can't quote from mock data |
 | Compliance review and sign-off of `compliance-rules.json`: phrase lists, fixed wording, consent and disclosure wording, and whether a soft-check decline triggers the lender's notice the no-offers wording promises (PRD NG-2) | Every borrower-facing word needs compliance approval |
 | Embed the panel in the partner portal; the portal's gateway sets `x-contractor-id` from the signed-in session | Identity must come from authentication, not the browser (PRD A-4) |
-| The soft check takes the homeowner's details from the portal's application (address, date of birth) instead of the demo test profile | The real decision engine needs the applicant's identity |
+| The soft check takes the homeowner's details from the portal's application (address, date of birth) instead of the credit mock profile | The real decision engine needs the applicant's identity |
 | Deploy the service on ECS Fargate with the key in AWS Secrets Manager | The pilot runs in the company's environment |
 | Audit store on RDS Postgres, the service's role limited to `INSERT` and `SELECT` | Append-only by permission, not by the prototype's triggers |
 | Pilot with 20–30 roofing contractors behind a feature flag: cards first, then the assistant once eval and escalation rates hold | Contain risk while measuring real use |
@@ -54,7 +54,6 @@ Only what a pilot needs to run on real services with real contractors.
 | Item | Source |
 |---|---|
 | Meet the answer-time target: p95 is 9.9 s against 8 s; stream answers and cut second drafts | EVALS.md, PRD M-5 |
-| Raise grounding from 92% to 100% | EVALS.md |
 | Server-side model fallback on refusals | AI_LOG #29 |
 | Rate limit in Redis instead of counting audit rows | AI_LOG #33, data-model.md |
 | Generated API types shared by server and web, replacing the hand-mirrored types and card titles | AI_LOG #45, MR 5 |
