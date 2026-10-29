@@ -19,7 +19,7 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
 
 1. **Ballpark, with no homeowner data.** The contractor enters the project type and amount, and optionally the homeowner's monthly budget. Payment ranges appear across the contractor's products.
 2. **Real offers, after consent.** The contractor records the homeowner's consent to a soft credit check. The mocked decision engine returns offers, and the three most useful are shown as cards.
-3. **AI assistant, on demand.** A side panel, closed by default, explains the cards on screen and answers the contractor's questions. The cards work without it.
+3. **AI assistant, on demand.** A chat beside the steps, closed by default, explains the cards on screen and answers the contractor's questions. The cards work without it.
 
 ## Functional requirements
 
@@ -53,12 +53,12 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
   Placeholder names follow the card label, and each label appears once per screen. Which names exist depends on the offers (for example, `diff.*` only exists when lowest total and lowest monthly are different cards), so the explain prompt is given the list of names that exist for this screen, never a fixed list.
 
   The calculator exposes each figure in exact form. **Only lifetime totals of $1,000 or more** (total of payments, finance charge, and the difference in total cost) also get a rounded form for the "say it like this" line (`{{diff.total.rounded}}` → "about $24,000"). Monthly payment, APR, term, number of payments and the promo cliff are always exact; no rounded form of them exists. A what-if with no matching figure goes back through the calculator; the model never estimates it.
-- **G-2** *No credit decisions, no recommendations:* the assistant may compare offers against what the homeowner said ("under her $300 budget, only the 20-year fits"). It may never say she'll be approved, or which offer she should pick.
-- **G-3** *No misleading marketing or pressure:* no "free", no "no interest" on a deferred-interest product, no "best deal", no pushing her past her own budget ("stretch to").
+- **G-2** *No credit decisions, no recommendations:* the assistant may compare offers against what the homeowner said ("under their $300 budget, only the 20-year fits"). It may never say they'll be approved, or which offer they should pick.
+- **G-3** *No misleading marketing or pressure:* no "free", no "no interest" on a deferred-interest product, no "best deal", no pushing them past their own budget ("stretch to").
 - **G-2 and G-3 are checked in three layers:**
   1. **Phrase list:** code blocks known phrases from the rules file. Fast, and the reason for each block is obvious.
   2. **Meaning check:** Haiku answers one yes/no question: "Does this suggest approval, or which offer to pick, or use misleading terms?" It quotes the phrase it flagged. This catches rewordings the list misses.
-  3. **Evals:** about 20 tricky rewordings must all be blocked. This measures what the first two layers miss.
+  3. **Evals:** 21 adversarial prompts must all be handled safely. This measures what the first two layers miss.
 
   The phrase list is a deliberately conservative floor. It blocks a few honest sentences ("qualify", "free") and misses some rewordings ("I'd suggest", "she recommends it" in other forms); the meaning check and evals cover those. Choices are logged in [AI_LOG.md](AI_LOG.md).
 - **G-4** *Disclosure completeness:* the renderer refuses to show any payment without the FR-7 fields. This is enforced in code, not by the model. **The spoken line counts too:** if the "say it like this" line mentions an offer's monthly payment, it must also include that offer's APR and term placeholders ("$289.31 a month for 20 years at 9.99% APR"), or the guard fails it. A promo payment said aloud must also include its cliff. A difference between offers (`diff.monthly`) isn't a payment and needs neither.
@@ -78,7 +78,7 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
 - **FR-19** The contractor's screen is four numbered steps (project, ballpark estimates, real offers, offers) with one "Next" line saying what to do now, headed by who the quote is for. The steps and the assistant sit in two fixed columns; the assistant is a chat with suggested prompts as tappable bubbles that fit what's on screen.
 
 **Cost limits (apply to every flow that calls a model)**
-- **FR-16** Each question has a fixed cost ceiling: a fixed pipeline with no agent loop, at most five model calls (understand, then up to two explain-and-check rounds), capped output per call, no background retries, messages up to 500 characters, and only the last 4 answers about the same offers sent. One 20-second deadline covers the whole question and cancels any call still running. Typical cost is about 1¢; worst case about 6¢ (estimates).
+- **FR-16** Each question has a fixed cost ceiling: a fixed pipeline with no agent loop, at most five model calls (understand, then up to two explain-and-check rounds), capped output per call, no background retries, messages up to 500 characters, and only the last 4 answers about the same offers sent. One 20-second deadline covers the whole question and cancels any call still running. Average cost was 1.17¢ in eval run 8 (an upper bound); worst case about 6¢ (estimate).
 - **FR-17** Each contractor gets a rate limit, for example 30 questions an hour and 200 a day. Ballpark and offer cards make no model call and aren't limited.
 - **FR-18** Token usage is logged in each audit record, so cost per contractor can be tracked. In production: cached repeat answers, an org-wide spending cap with alerts, and a Jira ticket raised on unusual spikes.
 
@@ -89,7 +89,7 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
 - **NG-3** Never ranks offers as "best for you" or recommends one. It only describes trade-offs against the homeowner's stated budget.
 - **NG-4** Never sends homeowner data anywhere before consent. The ballpark takes none. The name typed in step 1 stays in the browser until consent is recorded and is sent only with it; the name field never reaches the model or the credit engine (mock). Anything the contractor types into the assistant goes to the model as written.
 - **NG-5** Never answers outside financing for this project (tax advice, tax-credit eligibility, legal questions, other products). It says so and suggests who to ask.
-- **NG-6** Not built: document extraction, Plaid income verification, submitting the application, voice. These are covered in the design doc as later phases.
+- **NG-6** Not built: document extraction, Plaid income verification, submitting the application, voice. They are Phase 2 in [ROADMAP.md](ROADMAP.md).
 
 ## Guarantees the platform doesn't provide (this build owns them)
 
@@ -120,7 +120,7 @@ Each outcome is separate and visible to the contractor:
 | M-2 | Adversarial prompts blocked or redirected | — | 100% |
 | M-3 | Normal questions wrongly blocked *(counter-metric to M-2)* | — | ≤ 5% |
 | M-4 | Ballpark render time | — | < 1 s |
-| M-5 | Assistant answer, p95 (open: 10.7 s in eval run 4, see EVALS.md) | — | < 8 s |
+| M-5 | Assistant answer, p95 (open: 9.9 s in eval run 8, see EVALS.md) | — | < 8 s |
 | M-12 | Promo and total-cost answers state the figure they're about (the cliff, the total) | — | 100% |
 | M-13 | Cost per question, average | — | about 1¢ |
 | **Pilot (production)** | | | |
@@ -135,7 +135,7 @@ M-11 exists because the quickest way to cut abandonment is to push 0% promos. If
 
 ## Decision notes
 
-**D-1 No RAG in v1. It belongs to phase 2.**
+**D-1 No RAG in Phase 0. It belongs to Phase 2 ([ROADMAP.md](ROADMAP.md)).**
 
 *Why it doesn't fit the problem.* The catalog is structured data behind an API: rates, terms and eligibility. You query it; you don't search it, however many products there are. Numbers never come from retrieval. The one piece of text the assistant needs, the plain-language description of each product's terms, is short, approved by compliance, and stored with the product (FR-10a). Looking it up by product ID is exact; searching for it by similarity could return the wrong product's terms.
 

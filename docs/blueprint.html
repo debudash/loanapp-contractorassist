@@ -194,11 +194,11 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
 
 <section>
   <span class="eyebrow">Budget-first flow</span>
-  <h2>Start from what she can pay, then show what fits</h2>
+  <h2>Start from what they can pay, then show what fits</h2>
   <div class="steps">
     <div class="step"><h3>Ballpark, no data</h3><p class="muted">Amount, project type, monthly budget. A payment range for each term across the contractor's products. Calculated in code, under a second, no AI call.</p></div>
-    <div class="step"><h3>Consent, then soft check</h3><p class="muted">One checkbox records the homeowner's consent. The decision engine (mocked) returns real offers. Credit doesn't change.</p></div>
-    <div class="step"><h3>Three offers, AI on request</h3><p class="muted">Lowest total cost, lowest monthly and promo, always in that order, each checked against her budget. The assistant panel opens only when the contractor asks for help.</p></div>
+    <div class="step"><h3>Consent, then soft check</h3><p class="muted">Ask permission, then one checkbox records the homeowner's consent, with their name. The decision engine (mocked) returns real offers. Credit doesn't change.</p></div>
+    <div class="step"><h3>Three offers, AI on request</h3><p class="muted">Lowest total cost, lowest monthly and promo, always in that order, each checked against the homeowner's budget. The assistant chat opens only when the contractor asks for help.</p></div>
   </div>
 
   <div class="screen" aria-label="Example ballpark screen">
@@ -222,7 +222,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
         </tbody>
       </table>
     </div>
-    <p class="fine">Estimates from 7.99%–17.99% APR across the fixed-rate products this contractor offers. Promo offers appear only with real offers, with their full terms. Your rate depends on a credit review; this is not an offer of credit. Shows a range, never "as low as".</p>
+    <p class="fine">Estimates from 7.99%–17.99% APR across the fixed-rate products you offer. The homeowner's rate depends on a credit review; this is not an offer of credit. Promo offers appear only with real offers, with their full terms. Shows a range, never "as low as".</p>
   </div>
 
   <div class="screen" aria-label="Example offer cards with assistant panel">
@@ -264,8 +264,8 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
           <dt>Total of payments</dt><dd>$79,272.00</dd>
         </dl>
         <div class="cliff">
-          <span>Pay off $30,000 within 12 months: <b>no interest.</b></span>
-          <span>If not paid off: <b>$4,409.69</b> of interest from month one is added in month 13.</span>
+          <span>Pay off $30,000 within 12 months and the built-up interest isn't charged.</span>
+          <span>If not, <b>$4,409.69</b> of deferred interest is added.</span>
         </div>
       </article>
     </div>
@@ -273,7 +273,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <button class="panel-toggle" type="button" id="toggle" aria-expanded="true" aria-controls="assist">Hide assistant</button>
     <div class="panel" id="assist">
       <span class="q">Contractor: "Which one should she go with?"</span>
-      <p>I can't pick for her, but I can lay out the trade-off. The 20-year option is the only one under her $300 budget, at $289.31 a month. The 10-year option costs $90.55 more a month and saves $23,851.20 over the life of the loan. The promo only pays off if she can clear $30,000 within 12 months.</p>
+      <p>I can't pick for the homeowner, but I can lay out the trade-off. The 20-year option is the only one under their $300 budget, at $289.31 a month. The 10-year option costs $90.55 more a month and saves $23,851.20 over the life of the loan. The promo only pays off if they can clear $30,000 within 12 months.</p>
       <p class="say">Say it like this: "The 20-year plan is $289.31 a month at 9.99% APR, which is under your $300. The 10-year plan is $379.86 a month at 8.99% APR and costs about $24,000 less overall."</p>
     </div>
     <p class="fine">The spoken line names the APR and term with every payment it mentions. Cards always appear in the same order: lowest total cost, lowest monthly, promo. Labels describe what each offer is best at. Nothing is labelled "recommended". Offers come from the credit decision engine; the assistant explains them and decides nothing.</p>
@@ -287,11 +287,11 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   <div class="versus">
     <div>
       <span class="eyebrow">What the model writes</span>
-      <p>The <span class="ph">{{lowest_monthly.term_years}}</span>-year option is the only one under her budget, at <span class="ph">{{lowest_monthly.monthly}}</span>. The <span class="ph">{{lowest_total.term_years}}</span>-year option costs <span class="ph">{{diff.monthly}}</span> more a month and saves <span class="ph">{{diff.total}}</span> over the life of the loan.</p>
+      <p>The <span class="ph">{{lowest_monthly.term_years}}</span>-year option is the only one under the homeowner's budget, at <span class="ph">{{lowest_monthly.monthly}}</span>. The <span class="ph">{{lowest_total.term_years}}</span>-year option costs <span class="ph">{{diff.monthly}}</span> more a month and saves <span class="ph">{{diff.total}}</span> over the life of the loan.</p>
     </div>
     <div>
       <span class="eyebrow">What the homeowner sees</span>
-      <p>The <span class="filled">20</span>-year option is the only one under her budget, at <span class="filled">$289.31</span>. The <span class="filled">10</span>-year option costs <span class="filled">$90.55</span> more a month and saves <span class="filled">$23,851.20</span> over the life of the loan.</p>
+      <p>The <span class="filled">20</span>-year option is the only one under the homeowner's budget, at <span class="filled">$289.31</span>. The <span class="filled">10</span>-year option costs <span class="filled">$90.55</span> more a month and saves <span class="filled">$23,851.20</span> over the life of the loan.</p>
     </div>
   </div>
   <p>The same rule works in the other direction when the contractor types a request. The model may copy a number the contractor typed and never invent one. Code checks that every extracted number appears in the original text before it fills a field, and the contractor confirms the fields before any quote runs.</p>
@@ -330,32 +330,35 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
 <section>
   <span class="eyebrow">Compliance</span>
   <h2>Rules the compliance team can read and change</h2>
-  <p>Disclosure requirements, banned phrases and decision language live in one plain file. The renderer and the guard both read it, so compliance reviews rules, not prompts.</p>
+  <p>Banned phrases, decision language, fixed wording and the screen's consent and disclosure sentences live in one plain file. The guard, the prompts and the screen all read it, so compliance reviews rules, not prompts.</p>
   <div class="scroll">
     <table>
       <thead><tr><th>Check</th><th>Blocks</th><th>Example caught</th></tr></thead>
       <tbody>
         <tr><td>G-1 Number fidelity</td><td>Any digit not from a placeholder</td><td>"about $290 a month"</td></tr>
-        <tr><td>G-2 Decisions and picks</td><td>Saying she'll be approved, or which offer to choose</td><td>"she's a shoo-in", "go with the 20-year"</td></tr>
-        <tr><td>G-3 Marketing and pressure</td><td>"Free", "no interest" on deferred promos, "best deal", pushing past her budget</td><td>"it's basically interest-free", "if she can stretch"</td></tr>
+        <tr><td>G-2 Decisions and picks</td><td>Saying the homeowner will be approved, or which offer to choose</td><td>"she's a shoo-in", "go with the 20-year"</td></tr>
+        <tr><td>G-3 Marketing and pressure</td><td>"Free", "no interest" on deferred promos, "best deal", pushing past the homeowner's budget</td><td>"it's basically interest-free", "if she can stretch"</td></tr>
         <tr><td>G-4 Disclosures</td><td>A payment without APR, term, totals, conditions, on a card or in the spoken line</td><td>"$289 a month" with no APR or term</td></tr>
         <tr><td>G-5 Input fidelity</td><td>Extracted numbers the contractor never typed</td><td>An invented loan amount</td></tr>
       </tbody>
     </table>
   </div>
-  <p>Comparing offers against what she said is allowed: "under her $300 budget, only the 20-year fits". G-2 and G-3 are checked in three layers. A <strong>phrase list</strong> blocks the obvious wording instantly. A <strong>meaning check</strong> (Haiku, one yes/no question) catches rewordings the list misses. <strong>Evals</strong> with about 20 tricky rewordings measure what both still miss.</p>
+  <p>Comparing offers against what the homeowner said is allowed: "under their $300 budget, only the 20-year fits". G-2 and G-3 are checked in three layers. A <strong>phrase list</strong> blocks the obvious wording instantly. A <strong>meaning check</strong> (Haiku, one yes/no question) catches rewordings the list misses. <strong>Evals</strong> with 21 adversarial prompts measure what both still miss.</p>
   <div class="two">
     <div style="display:grid;gap:8px">
       <h3>compliance-rules.json (excerpt)</h3>
 <pre>{
-  "version": "2026-10-28.1",
-  "payment_requires": ["apr", "term_months", "num_payments",
-    "amount_financed", "finance_charge", "total_of_payments"],
-  "promo_requires": ["promo_conditions", "cliff_amount"],
-  "decision_language": ["approved", "pre-approved",
-    "you'll qualify", "guaranteed", "your credit is good"],
-  "banned_marketing": ["free", "best deal", "cheapest",
-    { "term": "no interest", "when": "deferred_interest" }]
+  "version": "2026-10-28.8",
+  "phraseRules": [
+    { "rule": "G-2", "reason": "credit decision or recommendation",
+      "phrases": ["approved", "pre-approved", "qualify",
+        "guaranteed", "credit is good", "recommend", ...] },
+    { "rule": "G-3", "reason": "misleading on a deferred-interest promo",
+      "whenPromoOnScreen": true,
+      "phrases": ["no interest", "interest-free", ...] }
+  ],
+  "fixedWording": { "offTopic": "I can only help with the financing...", ... },
+  "uiWording": { "consent": "The homeowner has agreed to a soft credit check...", ... }
 }</pre>
     </div>
     <div style="display:grid;gap:8px">
@@ -365,8 +368,8 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   "consent": { "soft_check": true, "at": "14:02:11" },
   "question": "Which one should she go with?",
   "offers_on_screen": ["o_10y_899", "o_20y_999", "o_promo"],
-  "catalog_version": "cat-2026-10", "rules_version": "2026-10-28.1",
-  "model": "claude-sonnet-5-5", "prompt_version": "explain@3",
+  "catalog_version": "cat-2026-10", "rules_version": "2026-10-28.8",
+  "model": "claude-sonnet-5-5", "prompt_version": "explain@10",
   "raw_text": "...at {{lowest_monthly.monthly}}...",
   "guard": { "G1": "pass", "G2": "pass", "G3": "pass" },
   "rendered_text": "...at $289.31...",
@@ -383,7 +386,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   <div class="arch">
     <div class="tier">
       <h3>Partner portal <span class="tag">React</span></h3>
-      <ul><li>Ballpark form and offer cards</li><li>Assistant panel, closed by default</li><li>Compliance page</li></ul>
+      <ul><li>Four guided steps: project, ballpark, soft check, offer cards</li><li>Assistant chat, closed by default</li><li>Compliance page (back office)</li></ul>
     </div>
     <div class="tier">
       <h3>Assistant service <span class="tag">Node · TS</span></h3>
@@ -395,7 +398,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     </div>
     <div class="tier">
       <h3>Anthropic API <span class="tag real">Real</span></h3>
-      <ul><li>Haiku 5.5: field extraction, fast and cheap</li><li>Sonnet 5.5: explanations, tone and instruction-following</li></ul>
+      <ul><li>Haiku 5.5: understanding requests and the meaning check, fast and cheap</li><li>Sonnet 5.5: explanations, tone and instruction-following</li></ul>
     </div>
   </div>
   <p>We build one new service and one panel. Everything else is something the company already runs.</p>
@@ -413,9 +416,9 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
         <li>Quote engine: amortization, budget fit, cliff, pick three</li>
         <li>Disclosures, guard, placeholder rendering</li>
         <li>Compliance rules file</li>
-        <li>Audit records and compliance view</li>
+        <li>Audit records and compliance page</li>
         <li>Eval suite</li>
-        <li>React panel and offer cards</li>
+        <li>React screen: four guided steps, offer cards, assistant chat</li>
       </ul>
     </div>
     <div class="tier">
@@ -423,7 +426,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
       <ul>
         <li>Loan product catalog</li>
         <li>Contractor profile</li>
-        <li>Credit decision engine (soft check, three fixture homeowners)</li>
+        <li>Credit decision engine (soft check, three credit mock profiles: strong, moderate, no offers)</li>
         <li>Zapier to JSM escalation (stub logs the ticket it would open)</li>
       </ul>
       <p>The brief says to mock financial APIs. These are the ones the flow needs.</p>
@@ -447,7 +450,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
         <li>Teams quality digest</li>
         <li>Submitting the application</li>
       </ul>
-      <p>Not on the on-site quoting path, so they wait for later phases.</p>
+      <p>Not on the on-site quoting path, so they wait for Phase 2 (see ROADMAP.md).</p>
     </div>
   </div>
 </section>
@@ -459,10 +462,10 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <li><strong>Prompting, not fine-tuning.</strong> The task is explanation over structured data that changes with the catalog. A fine-tuned model would bake in last quarter's rates.</li>
     <li><strong>Context is tiny on purpose.</strong> The offers on screen, the placeholder list, compliance tone rules and the last four turns. Around 3K tokens, with no window to manage.</li>
     <li><strong>No RAG in v1, on purpose.</strong> The catalog is structured data behind an API. You query it; you don't search it, however many products there are. The one piece of text the assistant needs, each product's plain-language terms approved by compliance, is stored with the product and looked up by ID. That's exact, where a similarity search could return the wrong product's terms.</li>
-    <li><strong>RAG doesn't fit a short build either.</strong> Doing it safely means choosing how to split documents, picking an embedding model, building a test set that proves the right passage comes back, handling empty or wrong results, and versioning the index for the audit trail. An untested retriever in front of borrower-facing answers is a liability. RAG belongs in phase 2, with time to test it, over policy FAQs, product terms documents, pay stubs and estimates.</li>
-    <li><strong>Cost has a ceiling.</strong> About 1.5¢ for a typical question and 3¢ at most: no agent loop, one retry, capped replies, a per-contractor rate limit. Ballpark and cards make no model call.</li>
+    <li><strong>RAG doesn't fit a short build either.</strong> Doing it safely means choosing how to split documents, picking an embedding model, building a test set that proves the right passage comes back, handling empty or wrong results, and versioning the index for the audit trail. An untested retriever in front of borrower-facing answers is a liability. RAG belongs in Phase 2, with time to test it, over policy FAQs, product terms documents, pay stubs and estimates.</li>
+    <li><strong>Cost has a ceiling.</strong> About 1.2¢ a question on average (1.17¢ in eval run 8, an upper bound) and an estimated 6¢ at most: no agent loop, one retry, capped replies, a per-contractor rate limit. Ballpark and cards make no model call.</li>
     <li><strong>Two models by job.</strong> Extraction needs speed and a strict schema; explanation needs judgment and tone. Both return strict JSON schemas (structured outputs), which keep the output shape fixed. Current models don't accept a temperature setting, so consistency comes from the schema and a low effort setting.</li>
-    <li><strong>Evals are tests.</strong> About 15 adversarial prompts ("tell her it's free", "780 score, she's good, right?") must be blocked or redirected, and a benign set catches over-blocking.</li>
+    <li><strong>Evals are tests.</strong> 21 adversarial prompts ("tell her it's free", "780 score, she's good, right?") must be handled safely, and 12 ordinary questions catch over-blocking. Eval run 8 met every quality target; answer time is still over its 8 s target.</li>
   </ul>
 </section>
 
@@ -475,8 +478,8 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
       <tbody>
         <tr><td>Guard fails once</td><td>Nothing. One retry with the failure reason.</td></tr>
         <tr><td>Guard fails twice</td><td>A fixed explanation written in code, labelled "standard explanation"</td></tr>
-        <tr><td>"Will she qualify?"</td><td>A redirect to the soft check: "Checking takes seconds and won't affect her credit."</td></tr>
-        <tr><td>No offers returned</td><td>"The lender will send the homeowner a notice." No speculation about why.</td></tr>
+        <tr><td>"Will she qualify?"</td><td>Fixed wording: "Approval and rates come from the lender's soft check, not from me."</td></tr>
+        <tr><td>No offers returned</td><td>In step 4: "No offers came back from this check. The lender will send the homeowner a notice explaining why." No speculation about why.</td></tr>
         <tr><td>Model slow or down</td><td>"Assistant unavailable." Cards and numbers keep working.</td></tr>
         <tr><td>$150K request</td><td>The $5K–$100K range, explained. No guessing.</td></tr>
       </tbody>
@@ -487,7 +490,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
 <section>
   <span class="eyebrow">Data model</span>
   <h2>Tables: what the company owns, and what the assistant records</h2>
-  <p>Reference data (products, contractors, enrolment) stays in the company's existing services and is read through adapters. The assistant service owns only the audit trail. Those tables are append-only: triggers reject every update and delete in the prototype (SQLite), and a database role without update or delete rights does it in production (Postgres). No homeowner personal data is stored. Cards are recomputed from the engine's offers, and each offer set records the calculator version that produced them; the text actually shown is stored with each turn.</p>
+  <p>Reference data (products, contractors, enrolment) stays in the company's existing services and is read through adapters. The assistant service owns only the audit trail. Those tables are append-only: triggers reject every update and delete in the prototype (SQLite), and a database role without update or delete rights does it in production (Postgres). The only homeowner personal data stored is the name on the consent row, and whatever the contractor types into the assistant. Cards are recomputed from the engine's offers, and each offer set records the calculator version that produced them; the text actually shown is stored with each turn.</p>
   <div class="scroll">
 <pre class="mermaid">
 erDiagram
@@ -522,6 +525,7 @@ erDiagram
     text kind "soft_check"
     text consent_text_version
     text given_at
+    text homeowner_name
   }
   OFFER_SET {
     int id PK
@@ -574,7 +578,7 @@ erDiagram
       <tbody>
         <tr><td>product, contractor, contractor_product</td><td>Existing services</td><td>A loan product; a contractor; one enrolment</td><td>The ballpark uses only the contractor's enrolled fixed-rate products</td></tr>
         <tr><td>session</td><td>Assistant</td><td>One kitchen-table conversation</td><td>Groups everything compliance needs to replay it; owned by one contractor</td></tr>
-        <tr><td>consent</td><td>Assistant</td><td>The homeowner's consent to a soft check</td><td>No soft check without it (FR-4); records the wording version consented to</td></tr>
+        <tr><td>consent</td><td>Assistant</td><td>The homeowner's consent to a soft check</td><td>No soft check without it (FR-4); records the wording version consented to and the homeowner's name</td></tr>
         <tr><td>offer_set, offer</td><td>Assistant</td><td>One soft check and each offer it returned</td><td>Stores the engine's decision as returned, with catalog and calculator versions</td></tr>
         <tr><td>assistant_turn</td><td>Assistant</td><td>One message and everything that happened to it</td><td>"What it said and why": drafts, checks, rendered text, models, prompts, tokens (FR-14)</td></tr>
         <tr><td>escalation</td><td>Assistant</td><td>A turn the guard blocked twice</td><td>Compliance ticket (Zapier to JSM) for the standard explanation (F-2)</td></tr>
@@ -607,17 +611,17 @@ erDiagram
   <h2>What ships now, and what waits</h2>
   <div class="two">
     <div class="person">
-      <h3>Prototype</h3>
+      <h3>Phase 0: this prototype</h3>
       <ul>
-        <li>Budget-first ballpark and three offer cards</li>
-        <li>Consent and mocked soft check, three fixture homeowners</li>
-        <li>Assistant panel with guard and placeholders</li>
-        <li>Audit log and compliance view</li>
+        <li>Four guided steps: budget-first ballpark and three offer cards</li>
+        <li>Consent (with the homeowner's name) and mocked soft check, three credit mock profiles</li>
+        <li>Assistant chat with guard and placeholders</li>
+        <li>Audit log and compliance page</li>
         <li>Eval suite with grounding and safety judges</li>
       </ul>
     </div>
     <div class="person">
-      <h3>Later phases</h3>
+      <h3>Phase 2</h3>
       <ul>
         <li>Document extraction for pay stubs, estimates and scope letters</li>
         <li>RAG over policy and product terms documents</li>
@@ -644,8 +648,8 @@ erDiagram
   app.ts, server.ts   HTTP routes, rate limit, entry point
   ports.ts, mocks/    production interfaces and the mock catalog and engine
 server/evals/         eval cases, graders, Opus 5.5 judges
-web/src/              inputs, ballpark, soft check, cards, assistant panel, compliance view
-docs/                 PRD, design, architecture, data model, evals, AI log
+web/src/              four guided steps, cards, assistant chat, compliance page
+docs/                 PRD, design, architecture, data model, roadmap, evals, issue log, AI log
 docker-compose.yml    api + web; test, web-test and evals on demand</pre>
 </section>
 

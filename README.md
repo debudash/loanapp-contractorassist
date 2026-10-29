@@ -23,18 +23,22 @@ Without an API key the app still works: ballpark, soft check and offer cards are
 
 The screen is four numbered steps, and the line under the quote bar says what to do next.
 
-1. **Project:** type the homeowner's name. The ballpark already shows payment ranges for $30,000 against a $300 budget. No AI involved.
-2. **Real offers:** tick the consent box and **Run soft check**. Three cards appear: lowest total cost, lowest monthly, promo, each with full disclosures; the promo shows its $4,409.69 cliff.
-3. **Need help explaining?** Tap a starter question, or ask "Is the promo basically free?", "She's got a 780 score, she'll get approved right?", or "drop it to $25K, she can do 250" (then tap **Apply**).
-4. **Compliance view** (top right) is the back-office page for this quote: a checklist (consent before the check, every answer passed every check, drafts blocked), then a timeline showing each draft's checks and what was shown. The raw record is folded under each step.
+1. **Project:** type the homeowner's name.
+2. **Ballpark estimates:** payment ranges for $30,000 against a $300 budget are already showing. No AI involved.
+3. **Real offers:** keep "Moderate credit" as the credit mock profile, tick the consent box and **Run soft check**.
+4. **Offers:** three cards appear: lowest total cost, lowest monthly, promo, each with full disclosures; the promo shows its $4,409.69 cliff.
+
+Then open the assistant (right-hand column). Tap a suggested prompt, or ask "Is the promo basically free?", "She's got a 780 score, she'll get approved right?", or "drop it to $25K, she can do 250" (then tap **Apply** in step 1).
+
+**Compliance view** (top right) is the back-office page for this quote: a checklist (consent before every soft check, every answer passed every check, drafts blocked, tickets, redirects), then a timeline showing each draft's checks and what was shown. The technical record is folded under each step.
 
 Pick "No offers (decline scenario)" as the credit mock profile, or "Valley HVAC" as the contractor, for the other paths.
 
 ## Tests and evals
 
 ```bash
-docker compose run --rm test       # server: typecheck + 133 unit and HTTP tests, model faked at the boundary
-docker compose run --rm web-test   # web: typecheck + 7 component and App tests
+docker compose run --rm test       # server: typecheck + 163 unit and HTTP tests, model faked at the boundary
+docker compose run --rm web-test   # web: typecheck + 23 component and App tests
 docker compose run --rm evals      # real models: 42 cases on 4 screens, run twice; needs ANTHROPIC_API_KEY
 ```
 
@@ -53,7 +57,7 @@ Ports on your machine: **5180** (web), **4100** (API). Contractor identity comes
 ## How it's built
 
 ```
-web/       React app (four guided steps, cards, assistant panel, compliance page), served by nginx
+web/       React app (four guided steps, assistant chat, compliance page), served by nginx
 server/
   src/quote.ts           payment maths, ballpark, three cards, disclosures, figures   ← every number starts here
   src/guard.ts           G-1 to G-4: no model-written numbers, no decisions, no steering, disclosures spoken
@@ -61,11 +65,13 @@ server/
   src/inputs.ts          G-5: the model may copy numbers the contractor typed, never invent them
   src/assist.ts          the pipeline: understand → suggest | explain → guard → meaning check → retry → fallback
   src/anthropicModel.ts  Haiku 5.5 (understand, check), Sonnet 5.5 (explain); structured outputs
-  src/compliance-rules.json  phrase lists and fixed wording, owned by compliance
+  src/prompts.ts         versioned prompts (understand@3, explain@10, meaning@7)
+  src/compliance-rules.json  phrase lists, fixed wording and screen wording, owned by compliance
   src/audit.ts, schema.ts    append-only audit tables (SQLite here, Postgres in production)
-  src/mocks/             loan catalog and credit decision engine, same interfaces as production
+  src/app.ts             HTTP routes and rate limit
+  src/ports.ts, mocks/   production interfaces; mock loan catalog and credit decision engine
   evals/                 eval cases, graders, Opus 5.5 judges
-docs/      PRD, design, architecture, data model, evals, AI log
+docs/      PRD, design, architecture, data model, roadmap, evals, issue log, AI log
 ```
 
 Architecture and sequence diagrams: [docs/architecture.md](docs/architecture.md). Tables: [docs/data-model.md](docs/data-model.md).
