@@ -1,4 +1,5 @@
-/* Partner-portal look: navy-purple ink, violet for actions, warm off-white. Semantic green/amber/red stay separate. */
+/* Partner-portal look: navy-purple ink, violet for actions, warm off-white. Semantic green/amber/red stay separate.
+   Light only, whatever the device's dark-mode setting. */
 :root {
   --bg: #f6f5f4;
   --surface: #ffffff;
@@ -21,28 +22,6 @@
   --body: "Figtree", "Segoe UI", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #130a32;
-    --surface: #1c1244;
-    --ink: #f1edff;
-    --muted: #b0a7d0;
-    --line: #33295e;
-    --brand: #a996ff;
-    --brand-soft: #2b2063;
-    --bubble-mine: #5a3fd1;
-    --guide: #6cc3e8;
-    --guide-soft: #112f44;
-    --ok: #5fcf9f;
-    --ok-soft: #163a31;
-    --warn: #f2b45a;
-    --warn-soft: #3b2a12;
-    --crit: #f08a98;
-    --crit-soft: #401a2a;
-    --code: #241a52;
-    color-scheme: dark;
-  }
 }
 
 * { box-sizing: border-box; }
