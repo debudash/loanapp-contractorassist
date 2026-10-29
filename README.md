@@ -4,7 +4,37 @@ A contractor in a homeowner's kitchen types *"$30K roof, she can do $300 a month
 
 The assistant is designed so the model never writes a figure, never makes or hints at a credit decision, and never steers the homeowner. Each rule is enforced in code and measured by evals. Every answer is recorded for compliance.
 
-Built for the AI Solutions Engineer take-home. Design document: [docs/DESIGN.md](docs/DESIGN.md).
+Built for the AI Solutions Engineer take-home. Design document: [docs/DESIGN.md](docs/DESIGN.md). Solution blueprint, the same design as a visual walkthrough: [docs/solution_blueprint.pdf](docs/solution_blueprint.pdf) (or [the HTML version](docs/solution_blueprint.html), to open in a browser).
+
+## Thin on purpose
+
+> "We're a small engineering team. I need solutions we can actually operate. Don't give me a science project." (CTO, in the brief)
+
+One question, answered end to end, by one service a small team can run. A homeowner's loan question has one way to go badly wrong: a number, a promise or a hint of approval that isn't true. So the slice is narrow, from budget to offers, and the effort went into making that one path hard to get wrong and easy to prove.
+
+**What you see:** four guided steps, three offer cards, one chat panel, one compliance page.
+
+**Underneath:**
+
+- Every figure computed in code; the model writes placeholders, and a guard rejects any number it writes itself.
+- A second model reads each draft for decisions and steering; one retry, then a standard explanation written in code.
+- Credit questions get compliance's wording, never the model's; every phrase list and fixed sentence lives in one file compliance owns.
+- Every draft, check and answer is recorded, append-only.
+- 42 eval cases, run twice, judged by a stronger model; 120 red-team attacks, and no answer broke a rule.
+- Every bug found after merge is logged with a test written first ([docs/ISSUE_LOG.md](docs/ISSUE_LOG.md)).
+
+**What it takes to run:** one new service, a few append-only tables, one API key. No vector store, no GPU, no training pipeline. About 1¢ a question.
+
+**What we said no to, and why:**
+
+| Tempting | Why not now |
+|---|---|
+| An agent loop | A fixed path is easier to run, test and audit; an agent adds ways to fail |
+| RAG | The catalog is structured data to look up; retrieval needs its own test set first (Phase 2, over policy documents) |
+| Fine-tuning | Rates change with the catalog; versioned prompts are logged with every answer instead |
+| Document extraction | Saves back-office time but doesn't help in the kitchen (Phase 2) |
+| Income verification | A flow problem with Plaid more than an AI problem |
+| A self-reported credit band | Would set expectations the lender may not meet; the soft check gives real offers |
 
 ## Run it
 
@@ -38,7 +68,7 @@ Pick "No offers (decline scenario)" as the credit mock profile, or "Valley HVAC"
 
 ```bash
 docker compose run --rm test       # server: typecheck + 172 unit and HTTP tests, model faked at the boundary
-docker compose run --rm web-test   # web: typecheck + 29 component, client and App tests
+docker compose run --rm web-test   # web: typecheck + 30 component, client and App tests
 docker compose run --rm evals      # real models: 42 cases on 4 screens, run twice; needs ANTHROPIC_API_KEY
 docker compose run --rm redteam    # Promptfoo red team against a throwaway API instance; needs ANTHROPIC_API_KEY
 ```
