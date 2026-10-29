@@ -4,6 +4,8 @@ A contractor in a homeowner's kitchen types *"$30K roof, she can do $300 a month
 
 The assistant is designed so the model never writes a figure, never makes or hints at a credit decision, and never steers the homeowner. Each rule is enforced in code and measured by evals. Every answer is recorded for compliance.
 
+**Live demo: https://gl-loanappassist.fly.dev** (the assistant answers up to 300 questions a day across all visitors).
+
 Built for the AI Solutions Engineer take-home. Design document: [docs/DESIGN.md](docs/DESIGN.md). Solution blueprint, the same design as a visual walkthrough: [docs/solution_blueprint.pdf](docs/solution_blueprint.pdf) (or [the HTML version](docs/solution_blueprint.html), to open in a browser).
 
 ## Thin on purpose
