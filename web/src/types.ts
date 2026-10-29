@@ -64,5 +64,5 @@ export interface ChatMessage {
 /** Compliance-owned wording, served by GET /api/wording from compliance-rules.json. */
 export interface Wording {
   version: string;
-  uiWording: { ballparkNote: string; softCheckAsk: string; consent: string; ballparkFinePrint: string; promoCliff: string; noBudgetHint: string };
+  uiWording: { ballparkNote: string; softCheckAsk: string; noOffersNotice: string; consent: string; ballparkFinePrint: string; promoCliff: string; noBudgetHint: string };
 }

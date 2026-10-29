@@ -95,7 +95,7 @@ describe("POST /api/offers", () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       noOffers: true,
-      message: rules.fixedWording.noOffers,
+      message: rules.uiWording.noOffersNotice,
       offerSetId: expect.any(Number),
       cards: [],
       allOffers: [],

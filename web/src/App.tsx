@@ -158,12 +158,13 @@ export function App() {
   const amountHint = !amountValid ? "Enter the project amount to see payments." : null;
 
   // The step the contractor is on, and what to do there.
-  // The ballpark is done as soon as it shows, so the contractor moves straight on to step 3.
-  const step = !amountValid || !ballpark?.ok ? 1 : hasOffers ? 4 : 3;
+  // The ballpark is done as soon as it shows, so the contractor moves straight on to step 3. Any
+  // result of the check, offers or none, is shown in step 4.
+  const step = !amountValid || !ballpark?.ok ? 1 : offers ? 4 : 3;
   const next =
     step === 1 ? "enter the project amount to see a ballpark."
+    : offers?.noOffers ? "no offers came back from this check. See step 4."
     : step === 4 ? `walk ${who} through the offers. Need help explaining? Ask the assistant.`
-    : offers?.noOffers ? "no offers came back from this check. See the note in step 3."
     : homeowner ? `share the ballpark estimates with ${who}. When ${who} wants real offers, ask for permission in step 3.`
     : "share the ballpark estimates. For real offers, add the homeowner's name in step 1, then ask for permission in step 3.";
 
@@ -263,10 +264,11 @@ export function App() {
                   onProfileChange={setProfile}
                   onRun={runSoftCheck}
                 />
-                {offers?.noOffers && <OfferCards result={offers} promoCliff="" />}
               </Step>
               <Step n={4} title={`Offers for ${who}`} current={step}>
-                {hasOffers ? (
+                {offers?.noOffers ? (
+                  <OfferCards result={offers} promoCliff="" />
+                ) : hasOffers ? (
                   <>
                     <OfferCards result={offers} promoCliff={wording?.uiWording.promoCliff ?? ""} />
                     <button type="button" className="link help" onClick={() => setAssistantOpen(true)}>

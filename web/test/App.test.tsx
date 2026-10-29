@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../src/App";
 
@@ -12,6 +12,7 @@ const wording = {
     noBudgetHint: "Ask the homeowner about a budget.",
     softCheckAsk: "Ask {homeowner} for permission to run a soft credit check.",
     ballparkNote: "Estimate only.",
+    noOffersNotice: "No offers came back from this check.",
   },
 };
 const card = {
@@ -20,12 +21,12 @@ const card = {
 };
 
 /** A fake of the assistant service's API, answering by path. */
-function fakeApi() {
+function fakeApi(offers: object = { noOffers: false, offerSetId: 1, cards: [card], allOffers: [card], totalCount: 1 }) {
   return vi.fn(async (url: string) => {
     const body = url.endsWith("/wording") ? wording
       : url.endsWith("/sessions") ? { sessionId: "s1" }
       : url.endsWith("/ballpark") ? { ok: true, aprMin: 7.99, aprMax: 17.99, rows: [] }
-      : url.endsWith("/offers") ? { noOffers: false, offerSetId: 1, cards: [card], allOffers: [card], totalCount: 1 }
+      : url.endsWith("/offers") ? offers
       : { session: null, consents: [], offerSets: [], turns: [], escalations: [] };
     return new Response(JSON.stringify(body), { status: url.endsWith("/sessions") ? 201 : 200 });
   });
@@ -101,6 +102,22 @@ describe("App", () => {
 
     expect(profile.compareDocumentPosition(consent) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(consent.compareDocumentPosition(run) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // Found in the owner's walkthrough: the no-offers notice sat between steps 3 and 4, while step 4
+  // still said to run the soft check.
+  it("shows a no-offers result in step 4, where offers would be", async () => {
+    vi.stubGlobal("fetch", fakeApi({ noOffers: true, offerSetId: 1, message: "No offers came back from this check.", cards: [], allOffers: [], totalCount: 0 }));
+    render(<App />);
+    fireEvent.change(screen.getByLabelText("Homeowner name"), { target: { value: "John Doe" } });
+    fireEvent.click(await screen.findByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Run soft check" }));
+
+    const step4 = await screen.findByRole("region", { name: "Offers for John Doe" });
+    await waitFor(() => expect(within(step4).getByText("No offers came back from this check.")).toBeDefined());
+    expect(within(step4).queryByText("Run the soft check to see real offers.")).toBeNull();
+    await waitFor(() => expect(step4.getAttribute("aria-current")).toBe("step")); // once the ballpark has loaded
+    expect(screen.getByText(/Next: no offers came back from this check\. See step 4\./)).toBeDefined();
   });
 
   // MR 9 spec review: offers stayed on screen under a new name, though the consent was another homeowner's.

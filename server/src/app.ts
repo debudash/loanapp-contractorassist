@@ -113,7 +113,7 @@ export function createApp(deps: Deps) {
 
     const presented = presentOffers(offers, quote.budget);
     res.json(offers.length === 0
-      ? { noOffers: true, message: rulesFile.fixedWording.noOffers, offerSetId, ...presented }
+      ? { noOffers: true, message: rulesFile.uiWording.noOffersNotice, offerSetId, ...presented }
       : { noOffers: false, offerSetId, ...presented });
   });
 

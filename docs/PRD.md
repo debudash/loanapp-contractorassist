@@ -85,7 +85,7 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
 ## Non-goals (enforced as behaviour)
 
 - **NG-1** Never estimates, predicts or explains an approval, decline or credit tier. Questions like "will she qualify?" are redirected to the soft check.
-- **NG-2** Never explains why an applicant received no offers. The UI says the lender will send the homeowner a notice, which is the lender's adverse-action duty, not the assistant's.
+- **NG-2** Never explains why an applicant received no offers. The UI says the lender will send the homeowner a notice, which is the lender's adverse-action duty, not the assistant's. *Assumption (mine, to confirm with compliance):* that a decline on this soft-check prequalification triggers such a notice. If it doesn't, the wording changes in `compliance-rules.json` only.
 - **NG-3** Never ranks offers as "best for you" or recommends one. It only describes trade-offs against the homeowner's stated budget.
 - **NG-4** Never sends homeowner data anywhere before consent. The ballpark takes none. The name typed in step 1 stays in the browser until consent is recorded and is sent only with it; the name field never reaches the model or the credit engine (mock). Anything the contractor types into the assistant goes to the model as written.
 - **NG-5** Never answers outside financing for this project (tax advice, tax-credit eligibility, legal questions, other products). It says so and suggests who to ask.

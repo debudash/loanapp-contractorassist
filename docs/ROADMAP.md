@@ -13,7 +13,7 @@ Only what a pilot needs to run on real services with real contractors.
 | Item | Why it can't wait |
 |---|---|
 | Replace the mocks with adapters to the real loan catalog, contractor profile and credit decision engine (`server/src/ports.ts`) | A pilot can't quote from mock data |
-| Compliance review and sign-off of `compliance-rules.json`: phrase lists, fixed wording, consent and disclosure wording | Every borrower-facing word needs compliance approval |
+| Compliance review and sign-off of `compliance-rules.json`: phrase lists, fixed wording, consent and disclosure wording, and whether a soft-check decline triggers the lender's notice the no-offers wording promises (PRD NG-2) | Every borrower-facing word needs compliance approval |
 | Embed the panel in the partner portal; the portal's gateway sets `x-contractor-id` from the signed-in session | Identity must come from authentication, not the browser (PRD A-4) |
 | The soft check takes the homeowner's details from the portal's application (address, date of birth) instead of the demo test profile | The real decision engine needs the applicant's identity |
 | Deploy the service on ECS Fargate with the key in AWS Secrets Manager | The pilot runs in the company's environment |
