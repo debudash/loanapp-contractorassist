@@ -68,7 +68,7 @@ Pick "No offers (decline scenario)" as the credit mock profile, or "Valley HVAC"
 
 ```bash
 docker compose run --rm test       # server: typecheck + 172 unit and HTTP tests, model faked at the boundary
-docker compose run --rm web-test   # web: typecheck + 29 component, client and App tests
+docker compose run --rm web-test   # web: typecheck + 30 component, client and App tests
 docker compose run --rm evals      # real models: 42 cases on 4 screens, run twice; needs ANTHROPIC_API_KEY
 docker compose run --rm redteam    # Promptfoo red team against a throwaway API instance; needs ANTHROPIC_API_KEY
 ```
