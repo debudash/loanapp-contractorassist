@@ -40,8 +40,20 @@ export function guard(draft: Draft, screen: Screen): { pass: boolean; failures: 
   const failures = [
     ...[draft.answer, draft.say].flatMap((text) => [...numberFidelity(text, screen), ...phrases(text, screen)]),
     ...spokenPayments(draft.say, screen),
+    ...roundedInAnswer(draft.answer),
   ];
   return { pass: failures.length === 0, failures };
+}
+
+/**
+ * G-1: rounded figures exist for the line said aloud; the answer the contractor reads uses
+ * exact figures. ISS-4: "how much in total?" was answered with "about $69,000" instead of
+ * the exact total on the card, so a rounded placeholder in the answer is rejected.
+ */
+function roundedInAnswer(answer: string): Failure[] {
+  return placeholdersIn(answer)
+    .filter(({ name }) => name.endsWith(".rounded"))
+    .map(({ placeholder: quote }) => ({ rule: "G-1" as const, reason: "rounded figure outside the spoken line", quote }));
 }
 
 // Number words the model might use to slip a figure past the digit check.

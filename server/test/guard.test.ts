@@ -62,6 +62,14 @@ describe("guard", () => {
       ]);
     });
 
+    // ISS-4: found by the first live eval run; "how much in total?" was answered with "about $69,000".
+    it("keeps rounded figures to the spoken line; the answer uses exact figures", () => {
+      expect(guard(answer("In total she'd pay {{lowest_monthly.total.rounded}}."), screen).failures).toEqual([
+        { rule: "G-1", reason: "rounded figure outside the spoken line", quote: "{{lowest_monthly.total.rounded}}" },
+      ]);
+      expect(guard(say("In total she'd pay {{lowest_monthly.total.rounded}}."), screen).pass).toBe(true);
+    });
+
     // ISS-3: found by the first live eval run; "about {{diff.total.rounded}}" rendered "about about $24,000".
     it("fails a rounded figure the model prefixed with 'about', which the figure already says", () => {
       expect(guard(say("It costs About  {{diff.total.rounded}} more."), screen).failures).toEqual([
