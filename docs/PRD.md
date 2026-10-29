@@ -75,7 +75,7 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
   - each guard result (pass or fail, with the reason)
   - the rendered text
 - **FR-15** A compliance page, separate from the contractor's screen, shows one quote: a short list of checks (consent before every soft check, every answer shown passed every check, drafts blocked and tickets raised), then a timeline in plain words. Each draft shows which checks passed or failed and why; the raw record is folded underneath.
-- **FR-19** The contractor's screen is four numbered steps (project, ballpark, real offers, offers) with one "Next" line saying what to do now, headed by who the quote is for. The assistant offers starter questions that fit what's on screen.
+- **FR-19** The contractor's screen is four numbered steps (project, ballpark estimates, real offers, offers) with one "Next" line saying what to do now, headed by who the quote is for. The steps and the assistant sit in two fixed columns; the assistant is a chat with suggested prompts as tappable bubbles that fit what's on screen.
 
 **Cost limits (apply to every flow that calls a model)**
 - **FR-16** Each question has a fixed cost ceiling: a fixed pipeline with no agent loop, at most five model calls (understand, then up to two explain-and-check rounds), capped output per call, no background retries, messages up to 500 characters, and only the last 4 answers about the same offers sent. One 20-second deadline covers the whole question and cancels any call still running. Typical cost is about 1¢; worst case about 6¢ (estimates).

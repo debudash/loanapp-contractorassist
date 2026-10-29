@@ -96,14 +96,14 @@ describe("App", () => {
     render(<App />);
 
     await waitFor(() => expect(screen.getByRole("region", { name: "Real offers" }).getAttribute("aria-current")).toBe("step"));
-    expect(screen.getByRole("region", { name: "Ballpark" }).getAttribute("aria-current")).toBeNull();
+    expect(screen.getByRole("region", { name: "Ballpark estimates" }).getAttribute("aria-current")).toBeNull();
   });
 
   // Slice 9: found in the UI walkthrough; nothing said what to do next.
   it("says what to do next at each step", async () => {
     render(<App />);
     fireEvent.change(screen.getByLabelText("Homeowner name"), { target: { value: "Maria Lopez" } });
-    expect(await screen.findByText(/Next: share the ballpark with Maria Lopez/)).toBeDefined();
+    expect(await screen.findByText(/Next: share the ballpark estimates with Maria Lopez/)).toBeDefined();
 
     await runSoftCheck();
 

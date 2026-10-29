@@ -47,7 +47,9 @@ export function InputsPanel({ inputs, onChange, suggestion, onApply, onDismiss, 
           <input inputMode="numeric" value={inputs.amount} placeholder="30000" onChange={(e) => onChange({ ...inputs, amount: e.target.value })} />
         </label>
         <label>
-          Monthly budget <span className="muted">(optional)</span>
+          <span>
+            Monthly budget <span className="muted">(optional)</span>
+          </span>
           <input inputMode="numeric" value={inputs.budget} placeholder="300" onChange={(e) => onChange({ ...inputs, budget: e.target.value })} />
         </label>
       </div>
