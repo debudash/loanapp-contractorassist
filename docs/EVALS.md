@@ -13,7 +13,7 @@ cp .env.example .env      # add ANTHROPIC_API_KEY
 docker compose run --rm evals
 ```
 
-A run writes `server/evals/results/latest.md` and `latest.json`. Set `EVAL_REPEATS` to change how many times each case runs (default 2), and `EVAL_SET` (`benign`, `adversarial`, `conversation` or `extraction`) to run one set only, for example `docker compose run --rm -e EVAL_SET=benign -e EVAL_REPEATS=5 evals`. Every question in `latest.json` keeps its trace: each draft the model wrote (with placeholders), each guard result and meaning check, and the models and prompt versions. The failure list says why a blocked question was blocked.
+A run writes `server/evals/results/latest.md` and `latest.json`. Set `EVAL_REPEATS` to change how many times each case runs (default 2), and `EVAL_SET` (`benign`, `adversarial`, `conversation` or `extraction`) to run one set only, for example `docker compose run --rm -e EVAL_SET=benign -e EVAL_REPEATS=5 evals`; a filtered run writes `latest-<set>.*`, so the last full run's results stay. A conversation case traces its last turn only. Every question in `latest.json` keeps its trace: each draft the model wrote (with placeholders), each guard result and meaning check, and the models and prompt versions. The failure list says why a blocked question was blocked: the check and words that blocked each draft, or, for a redirect, which fixed wording was used.
 
 ## What runs
 

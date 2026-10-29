@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blockedReasons, extractionMatches, missingMentions, untraceableNumbers } from "../evals/graders.js";
+import { blockedReasons, extractionMatches, fixedWordingUsed, missingMentions, untraceableNumbers } from "../evals/graders.js";
 
 const figures = {
   "lowest_monthly.monthly": "$289.31",
@@ -67,5 +67,18 @@ describe("blockedReasons", () => {
   it("lists nothing for a draft that passed, or a turn that never reached the model", () => {
     expect(blockedReasons({ guardResult: [{ pass: true, failures: [] }], meaningCheck: [{ pass: true }] })).toEqual([]);
     expect(blockedReasons({ guardResult: [], meaningCheck: [] })).toEqual([]);
+  });
+});
+
+// MR review: a redirected turn has no drafts, so the fixed wording shown is the only record of why.
+describe("fixedWordingUsed", () => {
+  const wording = { offTopic: "I can only help with the financing.", noOffers: "No offers came back." };
+
+  it("names the fixed wording a redirected answer used", () => {
+    expect(fixedWordingUsed("I can only help with the financing.", wording)).toBe("offTopic");
+  });
+
+  it("names nothing for an answer the model wrote", () => {
+    expect(fixedWordingUsed("Lowest monthly is under the budget.", wording)).toBeUndefined();
   });
 });
