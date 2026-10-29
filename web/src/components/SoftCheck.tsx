@@ -5,7 +5,7 @@ import { fill } from "../format";
 export const TEST_PROFILES = [
   ["moderate", "Moderate credit"],
   ["strong", "Strong credit"],
-  ["no_offers", "No offers"],
+  ["no_offers", "No offers (decline scenario)"],
 ] as const;
 
 interface Props {
@@ -22,7 +22,7 @@ interface Props {
 }
 
 /**
- * Step 3, FR-4, in the order it's done: pick the test profile (demo only), ask permission, tick
+ * Step 3, FR-4, in the order it's done: pick the credit mock profile, ask permission, tick
  * consent, run. Every soft check needs its own consent tick; it resets after each run and on a new quote.
  */
 export function SoftCheck({ disabled, homeowner, askText, consentText, profile, onProfileChange, onRun }: Props) {
@@ -30,9 +30,8 @@ export function SoftCheck({ disabled, homeowner, askText, consentText, profile, 
   return (
     <section className="panel soft-check" aria-label="Soft check">
       <div className="demo-only">
-        <span className="demo-tag">Demo only</span>
         <label>
-          Test credit profile
+          Credit mock profile
           <select
             value={profile}
             onChange={(e) => {

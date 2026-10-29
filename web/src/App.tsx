@@ -98,7 +98,7 @@ export function App() {
     };
   }, [api, sessionId, amount, budget, amountValid, budgetValid]);
 
-  // Offers belong to the amount, budget, homeowner and test profile they were run for; any change
+  // Offers belong to the amount, budget, homeowner and credit mock profile they were run for; any change
   // takes them off screen.
   // ISS-11: the profile lived inside SoftCheck, so switching it left the last result (such as the
   // no-offers notice) on screen as if it were the new profile's. App now holds it, and it clears
