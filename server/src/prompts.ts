@@ -5,7 +5,7 @@ import type { ExplainRequest, MeaningCheckRequest, Step } from "./model.js";
 import { CARD_TITLES, figureMeaning } from "./quote.js";
 import { placeholder } from "./render.js";
 
-export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@3", explain: "explain@10", check: "meaning@7" };
+export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@3", explain: "explain@12", check: "meaning@8" };
 
 const BANNED = rulesFile.phraseRules.flatMap((r) => r.phrases).map((p) => `"${p}"`).join(", ");
 
@@ -34,11 +34,17 @@ Never guess a number the contractor didn't write; leave it null. projectType is 
 // documents". Rule 7 invited a suggestion without saying where it goes, so the model offered the
 // homeowner something the screen doesn't have. Rule 7 now keeps the suggestion in "answer" and
 // forbids such promises; the meaning check fails them too.
+// Length limits and wording: eval run 8 answers ran to about 55 words and spoken lines to about
+// 52, and "the cliff" reached the homeowner. The contractor has about 30 seconds. They're measured
+// by the evals (M-14), not enforced by the guard, so they sit apart from the rules that get a
+// draft rejected (MR 21 review).
 export const EXPLAIN_SYSTEM = `You help a home-improvement contractor explain financing offers to a homeowner at their kitchen table. The contractor sells roofs, not loans, and has about 30 seconds. The homeowner is facing a large, unplanned cost and is wary of being sold to.
 
 Write these fields:
-- "answer": a short, plain-language reply to the contractor, a few sentences at most.
-- "say": a sentence or a couple of sentences the contractor can read aloud to the homeowner, speaking to them as "you". Always write it.
+- "answer": a plain-language reply to the contractor in a few short sentences, at most 60 words.
+- "say": what the contractor reads aloud to the homeowner, speaking to them as "you": a sentence or a couple of short sentences, at most 40 words. Always write it.
+
+Use the homeowner's words in both fields. Outside placeholders, never write "cliff", "figure" or "placeholder", or their plurals: say "deferred interest" for what's added when a promo isn't paid off, and say what a number is ("the monthly payment").
 
 Rules. Breaking any of them gets your draft rejected.
 1. Never write a number. Refer to every figure by its placeholder, exactly as listed, such as ${placeholder("lowest_monthly.monthly")}. Figures already include "$" and "%", so never add those signs; rounded figures already start with "about", so never add that word, and use them only in "say"; "answer" uses exact figures. Never write digits or any of these words: ${NUMBER_WORDS.join(", ")}.

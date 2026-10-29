@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blockedReasons, extractionMatches, fixedWordingUsed, missingMentions, untraceableNumbers } from "../evals/graders.js";
+import { blockedReasons, extractionMatches, fixedWordingUsed, jargonUsed, missingMentions, untraceableNumbers, wordCount } from "../evals/graders.js";
 
 const figures = {
   "lowest_monthly.monthly": "$289.31",
@@ -82,3 +82,21 @@ describe("fixedWordingUsed", () => {
     expect(fixedWordingUsed("Lowest monthly is under the budget.", wording)).toBeUndefined();
   });
 });
+
+// Answer length and internal terms, measured in code (the owner asked for shorter, plainer answers).
+describe("wordCount", () => {
+  it("counts words, with a figure as one word", () => {
+    expect(wordCount("The promo is $440.40 a month at 15.99% APR.")).toBe(9);
+    expect(wordCount("  ")).toBe(0);
+  });
+});
+
+describe("jargonUsed", () => {
+  it("finds internal terms the homeowner shouldn't hear, as whole words", () => {
+    expect(jargonUsed("That is the cliff: $4,409.69. The figure shown is exact.")).toEqual(["cliff", "figure"]);
+    // MR 21 review: plurals count too; run 9 said "the figures" in 3 of 39 answers.
+    expect(jargonUsed("Lay out the figures. The placeholders and cliffs aren't for her.")).toEqual(["figures", "placeholders", "cliffs"]);
+    expect(jargonUsed("Deferred interest of $4,409.69 is added if it isn't paid off in time.")).toEqual([]);
+  });
+});
+

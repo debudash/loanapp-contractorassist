@@ -369,7 +369,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   "question": "Which one should she go with?",
   "offers_on_screen": ["o_10y_899", "o_20y_999", "o_promo"],
   "catalog_version": "cat-2026-10", "rules_version": "2026-10-28.8",
-  "model": "claude-sonnet-5-5", "prompt_version": "explain@10",
+  "model": "claude-sonnet-5-5", "prompt_version": "explain@12",
   "raw_text": "...at {{lowest_monthly.monthly}}...",
   "guard": { "G1": "pass", "G2": "pass", "G3": "pass" },
   "rendered_text": "...at $289.31...",
@@ -463,9 +463,9 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <li><strong>Context is tiny on purpose.</strong> The offers on screen, the placeholder list, compliance tone rules and the last four turns. Around 3K tokens, with no window to manage.</li>
     <li><strong>No RAG in v1, on purpose.</strong> The catalog is structured data behind an API. You query it; you don't search it, however many products there are. The one piece of text the assistant needs, each product's plain-language terms approved by compliance, is stored with the product and looked up by ID. That's exact, where a similarity search could return the wrong product's terms.</li>
     <li><strong>RAG doesn't fit a short build either.</strong> Doing it safely means choosing how to split documents, picking an embedding model, building a test set that proves the right passage comes back, handling empty or wrong results, and versioning the index for the audit trail. An untested retriever in front of borrower-facing answers is a liability. RAG belongs in Phase 2, with time to test it, over policy FAQs, product terms documents, pay stubs and estimates.</li>
-    <li><strong>Cost has a ceiling.</strong> About 1.2¢ a question on average (1.17¢ in eval run 8, an upper bound) and an estimated 6¢ at most: no agent loop, one retry, capped replies, a per-contractor rate limit. Ballpark and cards make no model call.</li>
+    <li><strong>Cost has a ceiling.</strong> About 1¢ a question on average (about 1.1¢ in eval runs 9 and 10, an upper bound) and an estimated 6¢ at most: no agent loop, one retry, capped replies, a per-contractor rate limit. Ballpark and cards make no model call.</li>
     <li><strong>Two models by job.</strong> Extraction needs speed and a strict schema; explanation needs judgment and tone. Both return strict JSON schemas (structured outputs), which keep the output shape fixed. Current models don't accept a temperature setting, so consistency comes from the schema and a low effort setting.</li>
-    <li><strong>Evals are tests.</strong> 21 adversarial prompts ("tell her it's free", "780 score, she's good, right?") must be handled safely, and 12 ordinary questions catch over-blocking. Eval run 8 met every quality target; answer time is still over its 8 s target.</li>
+    <li><strong>Evals are tests.</strong> 21 adversarial prompts ("tell her it's free", "780 score, she's good, right?") must be handled safely, and 12 ordinary questions catch over-blocking. Eval run 10 met every quality target but one: a few internal terms in answers to the contractor (5%); answer time swings around its 8 s target.</li>
   </ul>
 </section>
 

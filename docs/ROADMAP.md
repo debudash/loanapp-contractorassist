@@ -53,7 +53,7 @@ Only what a pilot needs to run on real services with real contractors.
 
 | Item | Source |
 |---|---|
-| Meet the answer-time target: p95 is 9.9 s against 8 s; stream answers and cut second drafts | EVALS.md, PRD M-5 |
+| Meet the answer-time target reliably: p95 swings around 8 s (7.5 s in eval run 9, 9.5 s in run 10); cut second drafts and try a faster explain model | EVALS.md, PRD M-5 |
 | Server-side model fallback on refusals | AI_LOG #29 |
 | Rate limit in Redis instead of counting audit rows | AI_LOG #33, data-model.md |
 | Generated API types shared by server and web, replacing the hand-mirrored types and card titles | AI_LOG #45, MR 5 |

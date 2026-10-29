@@ -26,7 +26,7 @@ describe("what the judges see", () => {
   it("says what each figure means, including the cliff", () => {
     const facts = screenFacts(cards, figures(cards, 300), ["Fixed rate."]);
 
-    expect(facts).toContain("deferred interest added if not paid off in time (the cliff) $4,409.69");
+    expect(facts).toContain("deferred interest added if not paid off in time $4,409.69");
     expect(facts).toContain("monthly payment $289.31");
     expect(facts).toContain("Homeowner's monthly budget: $300.00");
   });

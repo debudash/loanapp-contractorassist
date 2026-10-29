@@ -125,10 +125,10 @@ export const FIGURE_MEANINGS: Record<string, string> = {
   over_budget: "over the homeowner's budget by",
   months: "promo months",
   payoff: "amount to pay off within the promo months",
-  cliff: "deferred interest added if not paid off in time (the cliff)",
+  cliff: "deferred interest added if not paid off in time",
 };
 
-/** What a figure name means, in words: "promo.cliff" → "deferred interest added if not paid off in time (the cliff)". */
+/** What a figure name means, in words: "promo.cliff" → "deferred interest added if not paid off in time". */
 // ISS-9: diff.total.rounded returned the exact difference's meaning, because the diff branch
 // returned before ", rounded" was added. Every name now goes through the same rounded suffix.
 export function figureMeaning(name: string): string {
