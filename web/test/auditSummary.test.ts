@@ -70,6 +70,18 @@ describe("compliance timeline", () => {
     expect(events[5]!.outcome).toBe("Compliance wording shown; the explaining model wasn't used");
   });
 
+  // ISS-12, found while taking stills for the demo video: a suggestion showed as "Inputs suggested: nothing".
+  it("names the inputs the assistant suggested, as the audit API stores them", () => {
+    const suggested = turn({
+      message: "drop it to $25K, she can do 250", outcome: "suggested", renderedAnswer: null, rawDraft: [], guardResult: [], meaningCheck: [],
+      suggestedInputs: { inputs: { amount: 25_000, budget: 250 }, dropped: [] },
+    });
+
+    expect(timeline({ ...trail, turns: [suggested] }).at(-1)!.outcome).toBe(
+      "Inputs suggested: amount $25,000.00, budget $250.00/mo. Nothing changed until the contractor tapped Apply",
+    );
+  });
+
   // MR 9 standards review: a guard rule added on the server must still show as a failed check here.
   it("shows a failure from a guard rule it has no name for", () => {
     const newRule = { pass: false, failures: [{ rule: "G-5", reason: "something new", quote: "x" }] };

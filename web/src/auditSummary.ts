@@ -41,7 +41,7 @@ interface Turn {
   outcome: string;
   renderedAnswer: string | null;
   renderedSay: string | null;
-  suggestedInputs: { amount?: number; budget?: number; projectType?: string } | null;
+  suggestedInputs: { inputs: { amount?: number; budget?: number; projectType?: string }; dropped: string[] } | null;
   guardResult: { pass: boolean; failures: Failure[] }[] | null;
   meaningCheck: ({ pass: boolean; quote?: string; reason?: string } | null)[] | null;
   models: Record<string, string> | null;
@@ -222,7 +222,11 @@ function draftChecks(a: Attempt): DraftCheck[] {
   return [...guardChecks, meaning];
 }
 
-function describe(s: Turn["suggestedInputs"]): string {
+// ISS-12: the service records a suggestion as { inputs, dropped }, but this read the fields from the
+// top level, so every suggestion showed as "nothing". The type now matches the record, and the
+// fields are read from inputs.
+function describe(suggested: Turn["suggestedInputs"]): string {
+  const s = suggested?.inputs;
   const parts = [
     s?.amount !== undefined && `amount ${money(s.amount)}`,
     s?.budget !== undefined && `budget ${money(s.budget)}/mo`,
