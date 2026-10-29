@@ -1,5 +1,6 @@
 // Deterministic graders for the eval suite. Judged graders (grounding, safety) are in judge.ts.
 import type { SuggestedInputs } from "../src/inputs.js";
+import type { MeaningVerdict } from "../src/model.js";
 import type { Figures } from "../src/quote.js";
 
 /**
@@ -22,4 +23,26 @@ export function extractionMatches(actual: SuggestedInputs, expected: SuggestedIn
 /** Figures a case requires the shown text to state, such as the promo cliff. */
 export function missingMentions(text: string, required: string[]): string[] {
   return required.filter((figure) => !text.includes(figure));
+}
+
+/** A turn's checks as the audit trail stores them: one entry per attempt, the verdict null when the guard already failed. */
+export interface TurnChecks {
+  guardResult: { pass: boolean; failures: { rule: string; reason: string; quote: string }[] }[] | null;
+  meaningCheck: (Pick<MeaningVerdict, "pass"> & Partial<MeaningVerdict> | null)[] | null;
+}
+
+/** Why each blocked draft was blocked, in order: the guard's failures, or the meaning check's. */
+export function blockedReasons(turn: TurnChecks): string[] {
+  const verdicts = turn.meaningCheck ?? [];
+  return (turn.guardResult ?? []).flatMap((guard, i) => {
+    const draft = `Draft ${i + 1}:`;
+    if (!guard.pass) return guard.failures.map((f) => `${draft} ${f.rule} "${f.quote}" (${f.reason})`);
+    const verdict = verdicts[i];
+    return verdict && !verdict.pass ? [`${draft} meaning check "${verdict.quote ?? ""}" (${verdict.reason ?? ""})`] : [];
+  });
+}
+
+/** Which fixed wording a redirected answer used, such as "offTopic". Redirects have no drafts, so this is their reason. */
+export function fixedWordingUsed(text: string, fixedWording: Record<string, string>): string | undefined {
+  return Object.entries(fixedWording).find(([, wording]) => wording === text)?.[0];
 }
