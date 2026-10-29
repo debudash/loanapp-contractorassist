@@ -6,6 +6,8 @@ The assistant is designed so the model never writes a figure, never makes or hin
 
 **Live demo: https://gl-loanappassist.fly.dev** (the assistant answers up to 300 questions a day across all visitors).
 
+**Demo video (2:45): https://youtu.be/eHQ8KbEAP4Y**
+
 Built for the AI Solutions Engineer take-home. Design document: [docs/DESIGN.md](docs/DESIGN.md). Solution blueprint, the same design as a visual walkthrough: [docs/solution_blueprint.pdf](docs/solution_blueprint.pdf) (or [the HTML version](docs/solution_blueprint.html), to open in a browser).
 
 ## Thin on purpose
@@ -54,7 +56,7 @@ Without an API key the app still works: ballpark, soft check and offer cards are
 
 ### Demo walkthrough
 
-The same steps as the demo video, in one run. The screen is four numbered steps, and the line under the quote bar says what to do next.
+The same steps as the [demo video](https://youtu.be/eHQ8KbEAP4Y), in one run. The screen is four numbered steps, and the line under the quote bar says what to do next.
 
 **The whole path**
 
