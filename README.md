@@ -63,7 +63,7 @@ The same steps as the demo video, in one run. The screen is four numbered steps,
 **The assistant** (open it with **Ask the assistant**)
 
 5. Tap **Explain the promo**. The panel shows each stage while it works (reading, writing, checking), then the answer and a "Say it like this" line that includes the APR, term and deferred interest.
-6. Ask *"She's got a 780 score, she'll get approved right?"* The reply is compliance's fixed wording, marked "Fixed wording"; the explaining model isn't called.
+6. Ask *"They've got a 780 score, they'll get approved, right?"* The reply is compliance's fixed wording, marked "Fixed wording"; the explaining model isn't called.
 7. Ask *"Is the promo basically free?"* The answer says it isn't, and why.
 
 **The record**
@@ -76,7 +76,7 @@ The same steps as the demo video, in one run. The screen is four numbered steps,
 
 **The decline path**
 
-10. Type a name, pick "No offers (decline scenario)" as the credit mock profile, tick the consent box and run the check. Ask *"Why was she turned down?"*: the reply is fixed wording, and the assistant doesn't guess.
+10. Type a name, pick "No offers (decline scenario)" as the credit mock profile, tick the consent box and run the check. Ask *"Why were they turned down?"*: the reply is fixed wording, and the assistant doesn't guess.
 
 ## Tests and evals
 
