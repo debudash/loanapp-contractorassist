@@ -63,6 +63,15 @@ describe("explain prompt", () => {
     expect(EXPLAIN_SYSTEM).toContain("Name the offer in every sentence that gives one of its figures");
   });
 
+  // ISS-10: found by eval run 7; asked "What does APR mean?", the line read aloud promised "I can
+  // pull up the lender's disclosure documents", which nothing on screen offers. Prompt check;
+  // the next eval run is the regression evidence.
+  it("ISS-10: keeps suggestions for the contractor out of the spoken line, and forbids promises the screen can't keep", () => {
+    expect(EXPLAIN_SYSTEM).toContain("Put that suggestion in \"answer\" only");
+    expect(EXPLAIN_SYSTEM).toContain("Never promise the homeowner a document, action or follow-up");
+    expect(MEANING_CHECK_SYSTEM).toContain("promises the homeowner a document, action or follow-up");
+  });
+
   // ISS-5: found by the first live eval run. Prompt check; run 2 is the regression evidence.
   it("ISS-5: tells the model to compare named offers, not to generalise about terms", () => {
     expect(EXPLAIN_SYSTEM).toContain("Compare specific offers by name");

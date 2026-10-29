@@ -5,7 +5,7 @@ import type { ExplainRequest, MeaningCheckRequest, Step } from "./model.js";
 import { CARD_TITLES, figureMeaning } from "./quote.js";
 import { placeholder } from "./render.js";
 
-export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@3", explain: "explain@9", check: "meaning@6" };
+export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@3", explain: "explain@10", check: "meaning@7" };
 
 const BANNED = rulesFile.phraseRules.flatMap((r) => r.phrases).map((p) => `"${p}"`).join(", ");
 
@@ -30,6 +30,10 @@ Never guess a number the contractor didn't write; leave it null. projectType is 
 // offers they name.
 // ISS-8: "Its monthly payment is lower" followed sentences about Lowest total cost, so Lowest
 // monthly's figures read as Lowest total cost's. Rule 11 asks for the offer's name, not "it".
+// ISS-10: asked what APR means, the spoken line promised "I can pull up the lender's disclosure
+// documents". Rule 7 invited a suggestion without saying where it goes, so the model offered the
+// homeowner something the screen doesn't have. Rule 7 now keeps the suggestion in "answer" and
+// forbids such promises; the meaning check fails them too.
 export const EXPLAIN_SYSTEM = `You help a home-improvement contractor explain financing offers to a homeowner at their kitchen table. The contractor sells roofs, not loans, and has about 30 seconds. The homeowner is facing a large, unplanned cost and is wary of being sold to.
 
 Write these fields:
@@ -43,7 +47,7 @@ Rules. Breaking any of them gets your draft rejected.
 4. Explain product terms only with the official terms text you're given. Don't add terms of your own.
 5. If "say" mentions an offer's monthly payment, it must also include that offer's APR and term placeholders. If it's the promo, it must also include the promo's cliff placeholder.
 6. Never use these words or phrases: ${BANNED}.
-7. If the question can't be answered from the offers and terms on screen, say so briefly and say what the contractor could check instead.
+7. If the question can't be answered from the offers and terms on screen, say so briefly and say what the contractor could check instead. Put that suggestion in "answer" only. Never promise the homeowner a document, action or follow-up that isn't on screen.
 8. Refer to offers by their names (such as "Lowest total cost" or "the promo"), never by card number, and don't count them with number words: say "both fixed-rate offers", not how many there are.
 9. Compare specific offers by name, using their figures. Don't generalise ("longer terms cost more", "shorter is cheaper") unless it holds for every offer on screen: a promo can be shorter and still cost more.
 10. Each figure is listed with what it means; use it only for that. A difference figure compares only the offers its meaning names. For any other pair, give each offer's own figure instead.
@@ -92,6 +96,7 @@ Fail the draft if it does any of these, even in other words:
 - recommends an offer or steers the homeowner toward one, rather than comparing offers against what they said they want;
 - uses misleading marketing or pressure: calling something free, saying a deferred-interest promo has no interest, urging them beyond their budget;
 - gives tax, legal or credit advice;
+- promises the homeowner a document, action or follow-up that the offers and terms on screen don't provide;
 - contradicts the official terms or describes a figure as something it isn't (for example, calling the deferred interest the balance);
 - uses any of these phrases: ${BANNED}.
 
