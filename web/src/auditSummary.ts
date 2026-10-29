@@ -156,7 +156,7 @@ export function timeline(trail: AuditTrail): TimelineEvent[] {
     events.push({
       at: String(s.requestedAt),
       title: offers === 0 ? "Soft check: no offers" : `Soft check: ${count(offers, "offer")}`,
-      details: [`Amount ${money(Number(s.amount))}, ${budget}`, `Calculator ${String(s.quoteVersion)} · test profile ${String(s.applicantRef)}`],
+      details: [`Amount ${money(Number(s.amount))}, ${budget}`, `Calculator ${String(s.quoteVersion)} · credit mock profile ${String(s.applicantRef)}`],
       record: s,
     });
   }

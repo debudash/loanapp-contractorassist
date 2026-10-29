@@ -88,7 +88,7 @@ describe("App", () => {
     render(<App />);
     await runSoftCheck();
 
-    fireEvent.change(screen.getByLabelText("Test credit profile"), { target: { value: "no_offers" } });
+    fireEvent.change(screen.getByLabelText("Credit mock profile"), { target: { value: "no_offers" } });
 
     await waitFor(() => expect(screen.queryByText("$379.86")).toBeNull());
   });
@@ -96,7 +96,7 @@ describe("App", () => {
   // Found in the owner's walkthrough: the profile came after the button, so the order to follow wasn't clear.
   it("puts the steps of a soft check in the order they're done: profile, consent, run", async () => {
     render(<App />);
-    const profile = await screen.findByLabelText("Test credit profile");
+    const profile = await screen.findByLabelText("Credit mock profile");
     const consent = screen.getByRole("checkbox");
     const run = screen.getByRole("button", { name: "Run soft check" });
 

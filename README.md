@@ -28,7 +28,7 @@ The screen is four numbered steps, and the line under the quote bar says what to
 3. **Need help explaining?** Tap a starter question, or ask "Is the promo basically free?", "She's got a 780 score, she'll get approved right?", or "drop it to $25K, she can do 250" (then tap **Apply**).
 4. **Compliance view** (top right) is the back-office page for this quote: a checklist (consent before the check, every answer passed every check, drafts blocked), then a timeline showing each draft's checks and what was shown. The raw record is folded under each step.
 
-Pick the "No offers" test profile (in the "Demo only" box) or "Valley HVAC" for the other paths.
+Pick "No offers (decline scenario)" as the credit mock profile, or "Valley HVAC" as the contractor, for the other paths.
 
 ## Tests and evals
 
