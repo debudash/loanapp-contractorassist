@@ -5,7 +5,7 @@ import type { ExplainRequest, Step } from "./model.js";
 import { CARD_TITLES } from "./quote.js";
 import { placeholder } from "./render.js";
 
-export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@2", explain: "explain@2", check: "meaning@2" };
+export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@2", explain: "explain@3", check: "meaning@2" };
 
 const BANNED = rulesFile.phraseRules.flatMap((r) => r.phrases).map((p) => `"${p}"`).join(", ");
 
@@ -28,27 +28,34 @@ Write two fields:
 
 Rules. Breaking any of them gets your draft rejected.
 1. Never write a number. Refer to every figure by its placeholder, exactly as listed, such as ${placeholder("lowest_monthly.monthly")}. Figures already include "$" and "%", so never add those signs. Never write digits or any of these words: ${NUMBER_WORDS.join(", ")}.
-2. The credit decision engine decided these offers. Never say or hint that she will or won't be approved, or what rate her credit would get.
-3. Never recommend an offer or say which one she should choose. You may compare offers against what she told us, such as her monthly budget when a ${placeholder("budget")} figure is listed: "only the ${placeholder("lowest_monthly.term_years")}-year option is under her ${placeholder("budget")} budget".
-4. Explain product terms only with the approved terms text you're given. Don't add terms of your own.
+2. The credit decision engine decided these offers. Never say or hint whether her application will succeed, or what rate her credit would get.
+3. Never favour an offer or tell her which one to take. You may compare offers against what she told us, such as her monthly budget when a ${placeholder("budget")} figure is listed: "only the ${placeholder("lowest_monthly.term_years")}-year option is under her ${placeholder("budget")} budget".
+4. Explain product terms only with the official terms text you're given. Don't add terms of your own.
 5. If "say" mentions an offer's monthly payment, it must also include that offer's APR and term placeholders. If it's the promo, it must also include the promo's cliff placeholder.
 6. Never use these words or phrases: ${BANNED}.
-7. If the question can't be answered from the offers and terms on screen, say so briefly and say what the contractor could check instead.`;
+7. If the question can't be answered from the offers and terms on screen, say so briefly and say what the contractor could check instead.
+8. Refer to offers by their names (such as "Lowest total cost" or "the promo"), never by card number, and don't count them with number words: say "both fixed-rate offers", not how many there are.`;
 
-/** The user turn for an explanation: the numbered cards, the figures by name, the approved terms, and the question. */
+// ISS-1: the prompt's own words led the model to write words the guard blocks: "approved
+// terms text" (G-2), numbered cards copied as "Card 1" (G-1) and counts such as "two
+// offers" (G-1). The prompt now avoids every guarded word, lists cards by position word,
+// and rule 8 asks for names instead of numbers or counts.
+const POSITIONS = ["first", "second", "third"];
+
+/** The user turn for an explanation: the cards by position and name, the figures by name, the official terms, and the question. */
 export function explainPrompt(request: ExplainRequest): string {
   const cards = request.cards.length
     ? request.cards
-        .map((c, i) => `${i + 1}. ${c.label} ("${CARD_TITLES[c.label]}"), ${c.kind === "fixed" ? "fixed rate" : "deferred-interest promo"}`)
+        .map((c, i) => `- ${POSITIONS[i]}: ${c.label} ("${CARD_TITLES[c.label]}"), ${c.kind === "fixed" ? "fixed rate" : "deferred-interest promo"}`)
         .join("\n")
     : "No offers yet. Only the ballpark is on screen.";
   const figures = Object.entries(request.figures)
     .map(([name, value]) => `- ${placeholder(name)} = ${value}`)
     .join("\n");
   const parts = [
-    `Cards on screen, in order:\n${cards}`,
+    `Cards on screen, left to right (the contractor may call them card one, card two and so on):\n${cards}`,
     `Figures you may use (write the placeholder, never the value):\n${figures || "- none"}`,
-    `Approved terms text:\n${request.termsTexts.map((t) => `- ${t}`).join("\n")}`,
+    `Official terms text:\n${request.termsTexts.map((t) => `- ${t}`).join("\n")}`,
   ];
   if (!("budget" in request.figures)) {
     parts.push(`She hasn't given a monthly budget, so don't compare against one. In your answer, suggest the contractor ask her: "What monthly amount would feel comfortable?"`);
