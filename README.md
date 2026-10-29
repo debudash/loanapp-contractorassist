@@ -37,12 +37,15 @@ Pick "No offers (decline scenario)" as the credit mock profile, or "Valley HVAC"
 ## Tests and evals
 
 ```bash
-docker compose run --rm test       # server: typecheck + 163 unit and HTTP tests, model faked at the boundary
-docker compose run --rm web-test   # web: typecheck + 23 component and App tests
+docker compose run --rm test       # server: typecheck + 172 unit and HTTP tests, model faked at the boundary
+docker compose run --rm web-test   # web: typecheck + 29 component, client and App tests
 docker compose run --rm evals      # real models: 42 cases on 4 screens, run twice; needs ANTHROPIC_API_KEY
+docker compose run --rm redteam    # Promptfoo red team against a throwaway API instance; needs ANTHROPIC_API_KEY
 ```
 
 Eval results are written to `server/evals/results/` and summarised in [docs/EVALS.md](docs/EVALS.md).
+
+The red team ([redteam/](redteam/)) uses [Promptfoo](https://www.promptfoo.dev/): Claude writes attacks against our own rules (credit decisions, steering, "interest-free", invented numbers, advice and promises, off-topic use), some disguised in leetspeak, base64 or rot13, and grades each answer. It runs against its own copy of the service (`redteam-api`), so the demo's audit data is untouched. Promptfoo's cloud generation, sharing and telemetry are switched off, and it gets only the API key. Results: `redteam/results/summary.md`, `latest.html` and `latest.json`. Afterwards, stop the throwaway API with `docker compose --profile tools down`.
 
 ## Configuration
 
@@ -51,6 +54,7 @@ Eval results are written to `server/evals/results/` and summarised in [docs/EVAL
 | `ANTHROPIC_API_KEY` | `.env` | Real model calls (assistant, evals). Optional for the app. |
 | `DB_PATH` | compose | SQLite audit store, in the `audit-data` volume. |
 | `PORT` | optional | API port inside the network; defaults to 4100. |
+| `RATE_LIMIT_PER_HOUR`, `RATE_LIMIT_PER_DAY` | optional | Questions per contractor; default 30 and 200. The red-team API raises them. |
 
 Ports on your machine: **5180** (web), **4100** (API). Contractor identity comes from the `x-contractor-id` header; in the portal, authentication happens upstream.
 

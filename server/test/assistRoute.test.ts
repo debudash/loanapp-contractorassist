@@ -1,6 +1,6 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { createApp, DEFAULT_LIMITS, type Deps } from "../src/app.js";
+import { createApp, DEFAULT_LIMITS, type Deps, limitsFromEnv } from "../src/app.js";
 import { AuditStore } from "../src/audit.js";
 import rules from "../src/compliance-rules.json" with { type: "json" };
 import { mockCatalog } from "../src/mocks/catalog.js";
@@ -169,6 +169,15 @@ describe("POST /api/assist", () => {
 
   it("uses the default limits when none are given", () => {
     expect(DEFAULT_LIMITS).toEqual({ perHour: 30, perDay: 200 });
+  });
+
+  // The red-team run uses its own API instance, which needs more questions than a contractor gets.
+  it("reads limits from the environment, keeping the defaults for anything missing or invalid", () => {
+    expect(limitsFromEnv({})).toEqual(DEFAULT_LIMITS);
+    expect(limitsFromEnv({ RATE_LIMIT_PER_HOUR: "1000", RATE_LIMIT_PER_DAY: "5000" })).toEqual({ perHour: 1000, perDay: 5000 });
+    expect(limitsFromEnv({ RATE_LIMIT_PER_HOUR: "lots", RATE_LIMIT_PER_DAY: "0" })).toEqual(DEFAULT_LIMITS);
+    // MR 22 review: Number() also accepted "1e3" and "0x10".
+    expect(limitsFromEnv({ RATE_LIMIT_PER_HOUR: "1e3", RATE_LIMIT_PER_DAY: "0x10" })).toEqual(DEFAULT_LIMITS);
   });
 });
 

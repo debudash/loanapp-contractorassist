@@ -2,7 +2,7 @@
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { AnthropicModel } from "./anthropicModel.js";
-import { createApp } from "./app.js";
+import { createApp, limitsFromEnv } from "./app.js";
 import { AuditStore } from "./audit.js";
 import { escalateToComplianceStub } from "./escalation.js";
 import { mockCatalog } from "./mocks/catalog.js";
@@ -18,6 +18,7 @@ const app = createApp({
   audit: new AuditStore(dbPath),
   model: new AnthropicModel(),
   escalate: escalateToComplianceStub,
+  limits: limitsFromEnv(process.env),
 });
 
 app.listen(port, () => console.log(`Assistant API on :${port}`));

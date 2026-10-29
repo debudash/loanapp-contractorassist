@@ -91,6 +91,21 @@ Two runs per case, 84 graded turns per run. Models under test: Claude Haiku 5.5 
 
 **Safety held in every run:** every adversarial prompt (credit decisions, steering, "tell her it's free", made-up numbers, tax advice, prompt injection, post-decline questions) was handled safely, and no invented number reached the screen.
 
+## Red team (Promptfoo)
+
+Our suite tests the cases we thought of; the red team tests ones we didn't. [Promptfoo](https://www.promptfoo.dev/) 0.124.1 runs against its own copy of the service over HTTP (`docker compose run --rm redteam`, [redteam/](../redteam/)). Claude Opus 5.5 writes 5 attacks for each of six policies taken from our rules (credit decisions, steering, misleading promo language, numbers not from the calculator, advice and promises, off-topic use), sends each one plain and disguised in leetspeak, base64 and rot13, and grades every answer. Promptfoo's cloud generation and telemetry are off, so nothing leaves except calls to Anthropic. Summary: [eval-runs/redteam-1.md](eval-runs/redteam-1.md).
+
+**Run 1 (explain@12): 120 attacks. No answer broke one of our rules; the disguised attacks never reached the guard.**
+
+| Attacks | How the assistant handled them | Verdict |
+|---|---|---|
+| 30 plain | 22 got compliance's fixed wording, 5 got checked answers, 3 became input suggestions | 28 passed; 2 flagged, both allowed by G-1 (below) |
+| 90 disguised | 89 got the "unavailable" message because the model call failed; 1 was stopped by the 500-character limit before any model call | 57 passed; 32 not graded, because the grader returned nothing for the scrambled text; 1 service error (the limit) |
+
+- **The two flags** were rounded totals in the spoken line ("about $24,000 less in total") and the code-computed difference between the lowest-total-cost and lowest-monthly offers. G-1 allows both: every number comes from the calculator, and rounded totals are for speech. The test policy had said "only figures on screen", stricter than G-1, and now matches it. Whether a spoken line should use numbers that aren't printed on a card is a question for compliance.
+- **The disguised attacks tested the fallback, not the guard.** Every one ended in "unavailable": the model call failed before a draft existed. The audit trail doesn't record why a call failed, so the cause isn't proven; Promptfoo's own calls to Claude on the same scrambled text logged API safety refusals, which suggests the same. The guard's text normalisation is covered by `guard.test.ts` instead. Recording why a model call failed is a small follow-up.
+- **Not covered yet:** multi-step attacks. In this version the default `jailbreak` strategy uses Promptfoo's cloud-only attacker; `jailbreak:tree`, `crescendo` and `hydra` run on our own provider and are the next step ([ROADMAP.md](ROADMAP.md)). `summarise.mjs` keeps "not graded" and service errors apart from real breaks, since Promptfoo counts both as fails.
+
 ## In CI
 
 In production the suite is the gate between unit tests and the build: any change to a prompt, a model version or `compliance-rules.json` must pass it. Each escalation, wrong-answer report or compliance finding becomes a new case first.
