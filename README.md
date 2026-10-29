@@ -73,7 +73,7 @@ The same steps as the demo video, in one run. The screen is four numbered steps,
 
 **Budget first**
 
-9. **Back to the quote**, then **Start new quote**. Open the assistant and tap *"$25K roof, they can do $250 a month"*. The suggested amount and budget appear in step 1; nothing changes until you tap **Apply**.
+9. **Back to the quote**, then **Start new quote**, and type the homeowner's name. Open the assistant and tap *"$25K roof, they can do $250 a month"*. The suggested amount and budget appear in step 1; nothing changes until you tap **Apply**.
 
 **The decline path**
 
