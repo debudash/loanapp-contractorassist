@@ -5,7 +5,7 @@ import type { ExplainRequest, MeaningCheckRequest, Step } from "./model.js";
 import { CARD_TITLES, figureMeaning } from "./quote.js";
 import { placeholder } from "./render.js";
 
-export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@3", explain: "explain@8", check: "meaning@5" };
+export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@3", explain: "explain@9", check: "meaning@6" };
 
 const BANNED = rulesFile.phraseRules.flatMap((r) => r.phrases).map((p) => `"${p}"`).join(", ");
 
