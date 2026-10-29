@@ -5,7 +5,7 @@ import type { ExplainRequest, MeaningCheckRequest, Step } from "./model.js";
 import { CARD_TITLES, figureMeaning } from "./quote.js";
 import { placeholder } from "./render.js";
 
-export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@3", explain: "explain@7", check: "meaning@5" };
+export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@3", explain: "explain@8", check: "meaning@5" };
 
 const BANNED = rulesFile.phraseRules.flatMap((r) => r.phrases).map((p) => `"${p}"`).join(", ");
 
@@ -28,6 +28,8 @@ Never guess a number the contractor didn't write; leave it null. projectType is 
 // were listed by value only, so a difference looked usable for any pair. Each figure now comes
 // with its meaning (as the meaning check already gets), and rule 10 limits differences to the
 // offers they name.
+// ISS-8: "Its monthly payment is lower" followed sentences about Lowest total cost, so Lowest
+// monthly's figures read as Lowest total cost's. Rule 11 asks for the offer's name, not "it".
 export const EXPLAIN_SYSTEM = `You help a home-improvement contractor explain financing offers to a homeowner at their kitchen table. The contractor sells roofs, not loans, and has about 30 seconds. The homeowner is facing a large, unplanned cost and is wary of being sold to.
 
 Write these fields:
@@ -44,7 +46,8 @@ Rules. Breaking any of them gets your draft rejected.
 7. If the question can't be answered from the offers and terms on screen, say so briefly and say what the contractor could check instead.
 8. Refer to offers by their names (such as "Lowest total cost" or "the promo"), never by card number, and don't count them with number words: say "both fixed-rate offers", not how many there are.
 9. Compare specific offers by name, using their figures. Don't generalise ("longer terms cost more", "shorter is cheaper") unless it holds for every offer on screen: a promo can be shorter and still cost more.
-10. Each figure is listed with what it means; use it only for that. A difference figure compares only the offers its meaning names. For any other pair, give each offer's own figure instead.`;
+10. Each figure is listed with what it means; use it only for that. A difference figure compares only the offers its meaning names. For any other pair, give each offer's own figure instead.
+11. Name the offer in every sentence that gives one of its figures. Don't write "it" or "its" for an offer: when several offers are discussed, the reader can't tell which one you mean.`;
 
 // ISS-1: numbered cards were copied as "Card 1" (G-1), so cards are listed by position word.
 // One word per card slot (MAX_CARDS in quote.ts).

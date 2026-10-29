@@ -52,6 +52,13 @@ describe("explain prompt", () => {
     expect(EXPLAIN_SYSTEM).toContain("A difference figure compares only the offers its meaning names");
   });
 
+  // ISS-8: found by eval run 5; "Its monthly payment is lower" followed sentences about Lowest
+  // total cost, so Lowest monthly's figures read as Lowest total cost's. Prompt check; run 6 is
+  // the regression evidence.
+  it("ISS-8: tells the model to name the offer in every sentence that gives its figures", () => {
+    expect(EXPLAIN_SYSTEM).toContain("Name the offer in every sentence that gives one of its figures");
+  });
+
   // ISS-5: found by the first live eval run. Prompt check; run 2 is the regression evidence.
   it("ISS-5: tells the model to compare named offers, not to generalise about terms", () => {
     expect(EXPLAIN_SYSTEM).toContain("Compare specific offers by name");
