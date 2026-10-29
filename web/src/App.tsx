@@ -5,7 +5,7 @@ import { Ballpark } from "./components/Ballpark";
 import { ComplianceView } from "./components/ComplianceView";
 import { type Inputs, InputsPanel } from "./components/InputsPanel";
 import { OfferCards } from "./components/OfferCards";
-import { SoftCheck } from "./components/SoftCheck";
+import { SoftCheck, TEST_PROFILES } from "./components/SoftCheck";
 import { money, projectLabel } from "./format";
 import type { BallparkResult, ChatMessage, OffersResult, SuggestedInputs, Wording } from "./types";
 
@@ -31,6 +31,7 @@ export function App() {
   const [suggestion, setSuggestion] = useState<SuggestedInputs | null>(null);
   const [ballpark, setBallpark] = useState<BallparkResult | null>(null);
   const [offers, setOffers] = useState<OffersResult | null>(null);
+  const [profile, setProfile] = useState<string>(TEST_PROFILES[0][0]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -97,10 +98,14 @@ export function App() {
     };
   }, [api, sessionId, amount, budget, amountValid, budgetValid]);
 
-  // Offers belong to the amount, budget and homeowner they were run for; any change takes them off screen.
+  // Offers belong to the amount, budget, homeowner and test profile they were run for; any change
+  // takes them off screen.
+  // ISS-11: the profile lived inside SoftCheck, so switching it left the last result (such as the
+  // no-offers notice) on screen as if it were the new profile's. App now holds it, and it clears
+  // the result like the other inputs do.
   useEffect(() => {
     setOffers(null);
-  }, [amount, budget, homeowner]);
+  }, [amount, budget, homeowner, profile]);
 
   const runSoftCheck = (applicantRef: string) =>
     guarded(async () => {
@@ -254,6 +259,8 @@ export function App() {
                   homeowner={homeowner}
                   askText={wording?.uiWording.softCheckAsk ?? ""}
                   consentText={wording?.uiWording.consent ?? ""}
+                  profile={profile}
+                  onProfileChange={setProfile}
                   onRun={runSoftCheck}
                 />
                 {offers?.noOffers && <OfferCards result={offers} promoCliff="" />}

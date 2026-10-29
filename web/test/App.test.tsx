@@ -81,6 +81,28 @@ describe("App", () => {
     expect(JSON.parse(String(call[1]!.body)).consent).toMatchObject({ given: true, homeownerName: "Maria Lopez" });
   });
 
+  // ISS-11: found in the owner's walkthrough; after switching the test credit profile, the last
+  // check's result (here the no-offers notice) stayed on screen as if it belonged to the new profile.
+  it("ISS-11: clears the last soft check's result when the test credit profile changes", async () => {
+    render(<App />);
+    await runSoftCheck();
+
+    fireEvent.change(screen.getByLabelText("Test credit profile"), { target: { value: "no_offers" } });
+
+    await waitFor(() => expect(screen.queryByText("$379.86")).toBeNull());
+  });
+
+  // Found in the owner's walkthrough: the profile came after the button, so the order to follow wasn't clear.
+  it("puts the steps of a soft check in the order they're done: profile, consent, run", async () => {
+    render(<App />);
+    const profile = await screen.findByLabelText("Test credit profile");
+    const consent = screen.getByRole("checkbox");
+    const run = screen.getByRole("button", { name: "Run soft check" });
+
+    expect(profile.compareDocumentPosition(consent) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(consent.compareDocumentPosition(run) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   // MR 9 spec review: offers stayed on screen under a new name, though the consent was another homeowner's.
   it("clears the offer cards when the homeowner's name changes", async () => {
     render(<App />);
