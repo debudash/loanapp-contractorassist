@@ -56,6 +56,9 @@ export type AssistResult =
   | { kind: "answer"; outcome: "answered" | "standard_explanation" | "redirected"; answer: string; say: string }
   | { kind: "unavailable"; message: string };
 
+/** What the assistant is doing, streamed as it starts each stage (server/src/assist.ts Stage). */
+export type Stage = "reading" | "writing" | "checking" | "rewriting";
+
 export interface ChatMessage {
   question: string;
   result: AssistResult;

@@ -20,7 +20,12 @@ export interface AssistDeps {
   escalate: (turnId: number, reason: string) => string;
   /** Whole-question deadline across every model call; calls still running are cancelled (F-4, FR-16). */
   deadlineMs?: number;
+  /** Told as each stage starts, so the screen can show progress instead of "Thinking…". */
+  onStage?: (stage: Stage) => void;
 }
+
+/** What the contractor sees happening: reading the question, writing, checking, and rewriting after a blocked draft. */
+export type Stage = "reading" | "writing" | "checking" | "rewriting";
 
 export type AssistResult =
   | { kind: "suggestion"; inputs: SuggestedInputs; dropped: string[] }
@@ -91,7 +96,10 @@ export async function assist(
     return { kind: "answer", outcome: "redirected", answer, say: "" };
   };
 
+  const stage = (s: Stage) => deps.onStage?.(s);
+
   try {
+    stage("reading");
     const understood = spend("understand", await deps.model.understand(request.message, deadline.signal));
 
     if (understood.kind === "inputs") {
@@ -112,11 +120,13 @@ export async function assist(
     const history = deps.audit.recentDrafts(request.sessionId, screen.offerSetId, HISTORY_TURNS);
     for (let n = 1; n <= MAX_ATTEMPTS; n++) {
       const last = attempts[attempts.length - 1];
+      stage(last ? "rewriting" : "writing");
       const draft = spend("explain", await deps.model.explain(
         { question: request.message, cards: screen.cards, figures: screen.figures, termsTexts: screen.termsTexts,
           history, retryReasons: last ? retryReasons(last) : [] },
         deadline.signal,
       ));
+      stage("checking");
       // Recorded before the meaning check, so a deadline during the check keeps the draft.
       const attempt: Attempt = { draft, guardResult: guard(draft, screen), verdict: null };
       attempts.push(attempt);

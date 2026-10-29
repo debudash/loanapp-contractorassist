@@ -154,7 +154,18 @@ export function createApp(deps: Deps) {
     inFlight.set(contractorId, (inFlight.get(contractorId) ?? 0) + 1);
     try {
       const onScreen = offerSetId === undefined ? undefined : offerSetId === null ? null : Number(offerSetId);
-      res.json(await assist({ sessionId, contractorId, message, offerSetId: onScreen }, deps));
+      const question = { sessionId, contractorId, message, offerSetId: onScreen };
+      if (!req.get("accept")?.includes("application/x-ndjson")) {
+        res.json(await assist(question, deps));
+        return;
+      }
+      // The UI asks for JSON lines: one per stage as it starts, then the result. nginx would
+      // otherwise hold the lines back until the end.
+      res.status(200).set({ "content-type": "application/x-ndjson", "x-accel-buffering": "no", "cache-control": "no-cache" });
+      res.flushHeaders();
+      const line = (value: unknown) => res.write(`${JSON.stringify(value)}\n`);
+      line({ result: await assist(question, { ...deps, onStage: (stage) => line({ stage }) }) });
+      res.end();
     } finally {
       inFlight.set(contractorId, inFlight.get(contractorId)! - 1);
     }
@@ -180,6 +191,11 @@ export function createApp(deps: Deps) {
       return;
     }
     console.error(error);
+    // A streamed answer has already sent its status: end it with an error line instead.
+    if (res.headersSent) {
+      res.end(`${JSON.stringify({ error: "internal_error" })}\n`);
+      return;
+    }
     res.status(500).json({ error: "internal_error" });
   });
   return app;

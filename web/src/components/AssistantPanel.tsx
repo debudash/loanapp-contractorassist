@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
-import type { ChatMessage } from "../types";
+import type { ChatMessage, Stage } from "../types";
 
 interface Props {
   messages: ChatMessage[];
@@ -9,12 +9,15 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   /** Prompts that fit what's on screen, asked with one tap. */
   starters: string[];
+  /** The question being answered, shown straight away, and the stages it has reached so far. */
+  asking?: string | null;
+  stages?: Stage[];
 }
 
 const OUTCOME_BADGES = { standard_explanation: "Standard explanation", redirected: "Fixed wording" } as const;
 
 /** The assistant, closed by default; the cards never depend on it (FR-9). A chat: the contractor's messages on the right, answers on the left. */
-export function AssistantPanel({ messages, busy, onAsk, open, onOpenChange, starters }: Props) {
+export function AssistantPanel({ messages, busy, onAsk, open, onOpenChange, starters, asking = null, stages = [] }: Props) {
   const [draft, setDraft] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
@@ -53,7 +56,7 @@ export function AssistantPanel({ messages, busy, onAsk, open, onOpenChange, star
     onAsk(draft.trim());
     setDraft("");
   };
-  const prompts = starters.filter((s) => !messages.some((m) => m.question === s));
+  const prompts = starters.filter((s) => s !== asking && !messages.some((m) => m.question === s));
 
   return (
     <aside className="assistant open" aria-label="Assistant">
@@ -85,7 +88,10 @@ export function AssistantPanel({ messages, busy, onAsk, open, onOpenChange, star
           ))}
           {busy && (
             <li ref={latest}>
-              <p className="bubble theirs muted">Thinking…</p>
+              {asking && <p className="bubble mine">{asking}</p>}
+              <div className="bubble theirs">
+                <Progress stages={stages} />
+              </div>
             </li>
           )}
         </ol>
@@ -123,6 +129,26 @@ export function AssistantPanel({ messages, busy, onAsk, open, onOpenChange, star
         </button>
       </form>
     </aside>
+  );
+}
+
+/** The pipeline's three stages as a checklist; a rewrite replaces "Writing" once a draft is blocked. */
+function Progress({ stages }: { stages: Stage[] }) {
+  const latest = stages[stages.length - 1] ?? "reading";
+  const at = { reading: 0, writing: 1, rewriting: 1, checking: 2 }[latest];
+  const rows = [
+    "Reading the question",
+    stages.includes("rewriting") ? "Rewriting: the first draft didn't pass a check" : "Writing the answer",
+    "Checking the numbers and wording",
+  ];
+  return (
+    <ol className="progress" aria-label="What the assistant is doing">
+      {rows.map((text, i) => (
+        <li key={i} data-state={i < at ? "done" : i === at ? "current" : "pending"}>
+          {text}
+        </li>
+      ))}
+    </ol>
   );
 }
 
