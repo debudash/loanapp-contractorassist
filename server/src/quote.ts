@@ -129,13 +129,15 @@ export const FIGURE_MEANINGS: Record<string, string> = {
 };
 
 /** What a figure name means, in words: "promo.cliff" → "deferred interest added if not paid off in time (the cliff)". */
+// ISS-9: diff.total.rounded returned the exact difference's meaning, because the diff branch
+// returned before ", rounded" was added. Every name now goes through the same rounded suffix.
 export function figureMeaning(name: string): string {
-  if (name === "budget") return "the homeowner's monthly budget";
-  if (name === "diff.monthly") return "how much more a month the lowest total cost offer is than the lowest monthly offer";
-  if (name.startsWith("diff.total")) return "how much less in total the lowest total cost offer costs than the lowest monthly offer";
-  const parts = name.split(".");
-  const key = parts.slice(1).filter((p) => p !== "rounded").join(".");
-  const meaning = FIGURE_MEANINGS[key] ?? key;
+  const base = name.replace(/\.rounded$/, "");
+  const meaning =
+    base === "budget" ? "the homeowner's monthly budget"
+    : base === "diff.monthly" ? "how much more a month the lowest total cost offer is than the lowest monthly offer"
+    : base === "diff.total" ? "how much less in total the lowest total cost offer costs than the lowest monthly offer"
+    : (FIGURE_MEANINGS[base.split(".").slice(1).join(".")] ?? base);
   return name.endsWith(".rounded") ? `${meaning}, rounded` : meaning;
 }
 

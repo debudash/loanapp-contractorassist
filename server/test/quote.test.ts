@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ballpark, figures, presentOffers } from "../src/quote.js";
+import { ballpark, figureMeaning, figures, presentOffers } from "../src/quote.js";
 import type { Offer, Product } from "../src/domain.js";
 
 // Expected values are worked examples from the standard amortization formula,
@@ -224,6 +224,15 @@ describe("presentOffers edge cases", () => {
 
 describe("figures", () => {
   const { cards } = presentOffers([offer("o-10y", 8.99, 10), offer("o-20y", 9.99, 20), promo12], 300);
+
+  // ISS-9: found by the MR 10 review; the explain model now reads these meanings, and the
+  // rounded total difference was described as exact.
+  it("ISS-9: says a rounded figure is rounded, for every rounded figure on screen", () => {
+    const rounded = Object.keys(figures(cards, 300)).filter((name) => name.endsWith(".rounded"));
+
+    expect(rounded).toContain("diff.total.rounded");
+    for (const name of rounded) expect(figureMeaning(name)).toMatch(/, rounded$/);
+  });
 
   it("names every figure by card label, formatted for display", () => {
     expect(figures(cards)).toMatchObject({

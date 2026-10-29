@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import rules from "../src/compliance-rules.json" with { type: "json" };
 import { guard, NUMBER_WORDS } from "../src/guard.js";
 import { EXPLAIN_SYSTEM, explainPrompt, MEANING_CHECK_SYSTEM, meaningCheckPrompt, UNDERSTAND_SYSTEM } from "../src/prompts.js";
-import { FIGURE_MEANINGS, figures, presentOffers } from "../src/quote.js";
+import { FIGURE_MEANINGS, figureMeaning, figures, presentOffers } from "../src/quote.js";
 
 const cards = presentOffers(
   [
@@ -34,12 +34,33 @@ describe("explain prompt", () => {
       .replace(/"\$" and "%"/, "");
     const cardHeader = explainPrompt(request).split("\n\n")[0]!;
 
+    // MR 10 review: since ISS-7 the figure meanings are prompt text too.
+    const meanings = Object.keys(figures(cards, 300)).map(figureMeaning).join(". ");
+
     expect(guardedWords(listsRemoved)).toEqual([]);
     expect(guardedWords(cardHeader)).toEqual([]);
+    expect(guardedWords(meanings)).toEqual([]);
   });
 
   it("ISS-1: tells the model to name offers instead of numbering or counting them", () => {
     expect(EXPLAIN_SYSTEM).toContain("Refer to offers by their names");
+  });
+
+  // ISS-7: found by eval run 5; "$90.55 more" compared the promo using the Lowest total cost
+  // difference. Prompt check; run 6 is the regression evidence.
+  it("ISS-7: says what each figure means, and that a difference compares only the offers it names", () => {
+    const prompt = explainPrompt(request);
+
+    expect(prompt).toContain("{{diff.monthly}} = $90.55: how much more a month the lowest total cost offer is than the lowest monthly offer");
+    expect(prompt).toContain("{{promo.cliff}} = $4,409.69: deferred interest added if not paid off in time (the cliff)");
+    expect(EXPLAIN_SYSTEM).toContain("A difference figure compares only the offers its meaning names");
+  });
+
+  // ISS-8: found by eval run 5; "Its monthly payment is lower" followed sentences about Lowest
+  // total cost, so Lowest monthly's figures read as Lowest total cost's. Prompt check; run 6 is
+  // the regression evidence.
+  it("ISS-8: tells the model to name the offer in every sentence that gives its figures", () => {
+    expect(EXPLAIN_SYSTEM).toContain("Name the offer in every sentence that gives one of its figures");
   });
 
   // ISS-5: found by the first live eval run. Prompt check; run 2 is the regression evidence.
