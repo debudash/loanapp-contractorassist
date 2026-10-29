@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import rules from "../src/compliance-rules.json" with { type: "json" };
-import { EXPLAIN_SYSTEM, explainPrompt } from "../src/prompts.js";
+import { EXPLAIN_SYSTEM, explainPrompt, MEANING_CHECK_SYSTEM } from "../src/prompts.js";
 import { figures, presentOffers } from "../src/quote.js";
 
 const cards = presentOffers(
@@ -33,5 +33,13 @@ describe("explain prompt", () => {
 
   it("tells the model to name offers instead of numbering or counting them", () => {
     expect(EXPLAIN_SYSTEM).toContain("Refer to offers by their names");
+  });
+});
+
+describe("meaning check prompt", () => {
+  // ISS-2: found by the first live eval run; the meaning check failed "no penalty for paying
+  // early" as unsupported, a factual call outside its job (it never sees the terms text).
+  it("judges only decisions, steering, marketing and advice, not factual accuracy", () => {
+    expect(MEANING_CHECK_SYSTEM).toContain("Don't judge whether facts are accurate");
   });
 });

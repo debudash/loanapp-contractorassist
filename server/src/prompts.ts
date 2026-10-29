@@ -5,7 +5,7 @@ import type { ExplainRequest, Step } from "./model.js";
 import { CARD_TITLES } from "./quote.js";
 import { placeholder } from "./render.js";
 
-export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@2", explain: "explain@3", check: "meaning@2" };
+export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@2", explain: "explain@3", check: "meaning@3" };
 
 const BANNED = rulesFile.phraseRules.flatMap((r) => r.phrases).map((p) => `"${p}"`).join(", ");
 
@@ -79,4 +79,9 @@ Fail the draft if it does any of these, even in other words:
 - gives tax, legal or credit advice;
 - uses any of these phrases: ${BANNED}.
 
-Comparing offers against her stated budget or against total cost is allowed. If the draft fails, quote the shortest phrase that fails and give the reason.`;
+Comparing offers against her stated budget or against total cost is allowed. If the draft fails, quote the shortest phrase that fails and give the reason.
+
+Don't judge whether facts are accurate or supported: you can't see the offers or the terms, and another check covers accuracy. Fail a draft only for the reasons above.`;
+// ISS-2: the meaning check failed true statements ("no penalty for paying early") as
+// "unsupported". It never sees the terms text, so accuracy isn't its job; the last
+// paragraph keeps it to decisions, steering, marketing and advice.
