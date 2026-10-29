@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS consent (
   session_id           TEXT NOT NULL REFERENCES session(id),
   kind                 TEXT NOT NULL CHECK (kind IN ('soft_check')),
   consent_text_version TEXT NOT NULL,
-  given_at             TEXT NOT NULL
+  given_at             TEXT NOT NULL,
+  homeowner_name       TEXT -- who gave consent; NULL only on rows recorded before it was kept
 );
 
 CREATE TABLE IF NOT EXISTS offer_set (

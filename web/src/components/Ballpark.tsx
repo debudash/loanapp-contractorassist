@@ -1,4 +1,4 @@
-import { fill, money, years } from "../format";
+import { fill, money, possessive, years } from "../format";
 import type { BallparkResult } from "../types";
 
 const FIT_LABELS = {
@@ -7,8 +7,18 @@ const FIT_LABELS = {
   does_not_fit: { className: "no", text: "Doesn't fit" },
 } as const;
 
-/** FR-1, FR-2: a range per term, no homeowner data, no AI. The fine print is compliance-owned wording. */
-export function Ballpark({ result, hint, finePrint }: { result: BallparkResult | null; hint: string | null; finePrint: string }) {
+interface Props {
+  result: BallparkResult | null;
+  hint: string | null;
+  /** Compliance-owned: what the ballpark is and isn't. */
+  note: string;
+  finePrint: string;
+  /** For the budget column: "Against Maria Lopez's budget". */
+  homeowner: string;
+}
+
+/** Step 2, FR-1, FR-2: a range per term, no homeowner data, no AI. The fine print is compliance-owned wording. */
+export function Ballpark({ result, hint, note, finePrint, homeowner }: Props) {
   if (hint) return <p className="notice">{hint}</p>;
   if (!result) return null;
   if (!result.ok) {
@@ -22,15 +32,15 @@ export function Ballpark({ result, hint, finePrint }: { result: BallparkResult |
   }
   const hasBudget = result.rows.some((r) => r.fit);
   return (
-    <section className="panel" aria-label="Ballpark">
-      <h2>Ballpark</h2>
+    <section className="panel" aria-label="Payment ranges">
+      <p className="hint">{note}</p>
       <div className="scroll">
         <table>
           <thead>
             <tr>
               <th>Term</th>
               <th>Monthly payment range</th>
-              {hasBudget && <th>Against her budget</th>}
+              {hasBudget && <th>Against {possessive(homeowner)} budget</th>}
             </tr>
           </thead>
           <tbody>

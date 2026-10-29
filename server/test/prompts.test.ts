@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import rules from "../src/compliance-rules.json" with { type: "json" };
 import { guard, NUMBER_WORDS } from "../src/guard.js";
-import { EXPLAIN_SYSTEM, explainPrompt, MEANING_CHECK_SYSTEM, meaningCheckPrompt } from "../src/prompts.js";
-import { figures, presentOffers } from "../src/quote.js";
+import { EXPLAIN_SYSTEM, explainPrompt, MEANING_CHECK_SYSTEM, meaningCheckPrompt, UNDERSTAND_SYSTEM } from "../src/prompts.js";
+import { FIGURE_MEANINGS, figures, presentOffers } from "../src/quote.js";
 
 const cards = presentOffers(
   [
@@ -66,5 +66,21 @@ describe("meaning check prompt", () => {
 
     expect(prompt).toContain("Deferred interest: built-up interest is added if not paid off.");
     expect(prompt).toContain("{{promo.cliff}} = deferred interest added if not paid off in time (the cliff)");
+  });
+});
+
+// Slice 9: found in the UI walkthrough; the prompts and wording assumed the homeowner is a woman.
+// The banned-phrase lists may name "she" and "her": they say what the model must never write.
+describe("wording about the homeowner", () => {
+  const noBudget = { ...request, figures: figures(cards) };
+  it.each([
+    ["understand prompt", UNDERSTAND_SYSTEM],
+    ["explain prompt", EXPLAIN_SYSTEM + explainPrompt(noBudget)],
+    ["meaning check prompt", MEANING_CHECK_SYSTEM.replace(/Never use these phrases.*|uses any of these phrases:.*/g, "")],
+    ["fixed wording", Object.values(rules.fixedWording).join(" ")],
+    ["UI wording", Object.values(rules.uiWording).join(" ")],
+    ["figure meanings", Object.values(FIGURE_MEANINGS).join(" ")],
+  ])("doesn't assume a gender: %s", (_, text) => {
+    expect(text.replace(/Never use these words or phrases:.*/g, "").match(/\b(she|her|hers|he|him|his)\b/gi)).toBeNull();
   });
 });

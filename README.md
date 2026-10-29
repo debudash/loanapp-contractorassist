@@ -21,12 +21,14 @@ Without an API key the app still works: ballpark, soft check and offer cards are
 
 ### A two-minute demo
 
-1. The ballpark shows payment ranges for $30,000 against a $300 budget. No AI involved.
-2. Tick the consent box and **Run soft check**. Three cards appear: lowest total cost, lowest monthly, promo, each with full disclosures; the promo shows its $4,409.69 cliff.
-3. **Ask the assistant**: "Which one fits her budget?", "Explain the promo", "She's got a 780 score, she'll get approved right?", or "drop it to $25K, she can do 250" (then tap **Apply**).
-4. **Compliance view** shows what was said and why: the model's draft with placeholders, every check, models, prompt versions, tokens.
+The screen is four numbered steps, and the line under the quote bar says what to do next.
 
-Try "Homeowner C (no offers)" and "Valley HVAC" for the other paths.
+1. **Project:** type the homeowner's name. The ballpark already shows payment ranges for $30,000 against a $300 budget. No AI involved.
+2. **Real offers:** tick the consent box and **Run soft check**. Three cards appear: lowest total cost, lowest monthly, promo, each with full disclosures; the promo shows its $4,409.69 cliff.
+3. **Need help explaining?** Tap a starter question, or ask "Is the promo basically free?", "She's got a 780 score, she'll get approved right?", or "drop it to $25K, she can do 250" (then tap **Apply**).
+4. **Compliance view** (top right) is the back-office page for this quote: a checklist (consent before the check, every answer passed every check, drafts blocked), then a timeline showing each draft's checks and what was shown. The raw record is folded under each step.
+
+Pick the "No offers" test profile (in the "Demo only" box) or "Valley HVAC" for the other paths.
 
 ## Tests and evals
 
@@ -51,7 +53,7 @@ Ports on your machine: **5180** (web), **4100** (API). Contractor identity comes
 ## How it's built
 
 ```
-web/       React app (inputs, ballpark, soft check, cards, assistant panel, compliance view), served by nginx
+web/       React app (four guided steps, cards, assistant panel, compliance page), served by nginx
 server/
   src/quote.ts           payment maths, ballpark, three cards, disclosures, figures   ← every number starts here
   src/guard.ts           G-1 to G-4: no model-written numbers, no decisions, no steering, disclosures spoken

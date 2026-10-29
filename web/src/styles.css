@@ -101,8 +101,48 @@ th { font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; colo
 .suggestion { background: var(--brand-soft); border-radius: 8px; padding: 10px; }
 .assistant form { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--line); }
 .assistant form input { flex: 1; min-width: 0; }
-.compliance details { border-top: 1px solid var(--line); padding: 8px 0; }
 .compliance summary { cursor: pointer; }
 .compliance dd { margin: 0; min-width: 0; }
 .compliance pre { background: var(--code); border-radius: 8px; padding: 8px; overflow-x: auto; font: 0.75rem/1.45 var(--mono); margin: 0; }
+
+/* Guided flow: who the quote is for, what to do next, and four numbered steps. */
+.quote-bar { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px; }
+.next { background: var(--brand-soft); border-radius: 10px; padding: 10px 14px; margin: 12px 0 16px; font-weight: 600; }
+.step { display: grid; gap: 8px; }
+.step > h2 { display: flex; gap: 10px; align-items: center; }
+.step-n { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; font: 700 0.85rem var(--body); background: var(--line); color: var(--muted); }
+.step.current .step-n { background: var(--brand); color: #fff; }
+.step.done .step-n { background: var(--ok-soft); color: var(--ok); }
+.step.upcoming > h2 { color: var(--muted); }
+.demo-only { border: 1px dashed var(--muted); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; }
+.demo-tag { justify-self: start; font: 700 0.7rem var(--body); letter-spacing: 0.08em; text-transform: uppercase; background: var(--warn-soft); color: var(--warn); padding: 2px 8px; border-radius: 999px; }
+.soft-check p { margin: 0; }
+button.help { justify-self: start; }
+.starters { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px 0; }
+button.starter { background: var(--brand-soft); color: var(--brand); font-weight: 600; font-size: 0.8rem; padding: 6px 10px; border-radius: 999px; text-align: left; }
+
+/* Compliance view: plain checks first, then the timeline; raw rows folded away. */
+.compliance-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.compliance h3 { margin-top: 0; }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.checks li { border-radius: 8px; padding: 8px 12px; background: var(--code); }
+.checks li.ok { background: var(--ok-soft); }
+.checks li.ok span { color: var(--ok); }
+.checks li.warn { background: var(--warn-soft); }
+.checks li.warn span { color: var(--warn); }
+.checks li.fail { background: var(--crit-soft); }
+.checks li.fail span { color: var(--crit); }
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; }
+.timeline > li { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.timeline time { color: var(--muted); font: 0.8rem var(--mono); padding-top: 2px; }
+.timeline p { margin: 4px 0 0; overflow-wrap: anywhere; }
+.draft { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+.draft .why { flex-basis: 100%; margin: 0; color: var(--crit); font-size: 0.85rem; }
+.badge.blocked { background: var(--crit-soft); color: var(--crit); }
+.check { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; background: var(--code); color: var(--muted); }
+.check.ok { background: var(--ok-soft); color: var(--ok); }
+.check.fail { background: var(--crit-soft); color: var(--crit); }
+.outcome { font-weight: 600; }
+.timeline details { margin-top: 6px; }
+@media (max-width: 600px) { .timeline > li { grid-template-columns: 1fr; gap: 2px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

@@ -4,7 +4,7 @@ Phase 0 is the prototype being submitted. Phase 1 is the pilot: the prototype co
 
 ## Phase 0: prototype (this submission)
 
-Budget-first ballpark, consent-gated soft check, three offer cards with every disclosure, the assistant (placeholders, guard, meaning check, fixed wording owned by compliance), the append-only audit trail with a compliance view, and the eval suite. See [README.md](../README.md).
+Budget-first ballpark, consent-gated soft check, three offer cards with every disclosure, the assistant (placeholders, guard, meaning check, fixed wording owned by compliance), the append-only audit trail with a compliance page (checklist and timeline for one quote), and the eval suite. See [README.md](../README.md).
 
 ## Phase 1: pilot (about two weeks)
 
@@ -15,6 +15,7 @@ Only what a pilot needs to run on real services with real contractors.
 | Replace the mocks with adapters to the real loan catalog, contractor profile and credit decision engine (`server/src/ports.ts`) | A pilot can't quote from mock data |
 | Compliance review and sign-off of `compliance-rules.json`: phrase lists, fixed wording, consent and disclosure wording | Every borrower-facing word needs compliance approval |
 | Embed the panel in the partner portal; the portal's gateway sets `x-contractor-id` from the signed-in session | Identity must come from authentication, not the browser (PRD A-4) |
+| The soft check takes the homeowner's details from the portal's application (address, date of birth) instead of the demo test profile | The real decision engine needs the applicant's identity |
 | Deploy the service on ECS Fargate with the key in AWS Secrets Manager | The pilot runs in the company's environment |
 | Audit store on RDS Postgres, the service's role limited to `INSERT` and `SELECT` | Append-only by permission, not by the prototype's triggers |
 | Pilot with 20–30 roofing contractors behind a feature flag: cards first, then the assistant once eval and escalation rates hold | Contain risk while measuring real use |
@@ -35,6 +36,7 @@ Only what a pilot needs to run on real services with real contractors.
 | Submitting the application from the panel | PRD NG-6 |
 | Voice input | PRD NG-6 |
 | Fee transparency guard: cash price against amount financed | PRD A-1 |
+| Compliance search across quotes (by contractor, homeowner, date) and a review queue for escalations | PRD FR-15 |
 
 ### Operations and data
 

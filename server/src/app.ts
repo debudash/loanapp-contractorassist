@@ -22,6 +22,7 @@ export interface Deps {
 
 export const DEFAULT_LIMITS = { perHour: 30, perDay: 200 };
 const MAX_MESSAGE_LENGTH = 500;
+const MAX_NAME_LENGTH = 100;
 const HOUR_MS = 3_600_000;
 const DAY_MS = 24 * HOUR_MS;
 
@@ -79,6 +80,12 @@ export function createApp(deps: Deps) {
       res.status(400).json({ error: "consent_required" });
       return;
     }
+    // Who gave consent, for the audit trail. The decision engine and the model never get it.
+    const homeownerName = typeof consent.homeownerName === "string" ? consent.homeownerName.trim() : "";
+    if (homeownerName === "" || homeownerName.length > MAX_NAME_LENGTH) {
+      res.status(400).json({ error: "homeowner_name_required" });
+      return;
+    }
     const sessionId = ownedSession(req, res);
     if (!sessionId) return;
     const quote = parseQuote(req.body, res);
@@ -89,7 +96,7 @@ export function createApp(deps: Deps) {
     }
 
     // Consent is recorded even if the check then fails: it was given.
-    const consentId = deps.audit.recordConsent(sessionId, consent.textVersion);
+    const consentId = deps.audit.recordConsent(sessionId, consent.textVersion, homeownerName);
     let offers;
     try {
       offers = await deps.engine.softCheck({ applicantRef, amount: quote.amount });

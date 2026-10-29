@@ -26,8 +26,11 @@ export function apiFor(contractorId: string) {
     ballpark: (sessionId: string, amount: number, budget?: number) =>
       call<BallparkResult>("POST", "/ballpark", { sessionId, amount, budget }),
     /** The consent version is the compliance rules version the consent wording came from (FR-4). */
-    offers: (sessionId: string, amount: number, budget: number | undefined, applicantRef: string, consentVersion: string) =>
-      call<OffersResult>("POST", "/offers", { sessionId, amount, budget, applicantRef, consent: { given: true, textVersion: consentVersion } }),
+    /** The homeowner's name is kept with the consent for the audit trail; the model never gets it. */
+    offers: (sessionId: string, amount: number, budget: number | undefined, applicantRef: string, consentVersion: string, homeownerName: string) =>
+      call<OffersResult>("POST", "/offers", {
+        sessionId, amount, budget, applicantRef, consent: { given: true, textVersion: consentVersion, homeownerName },
+      }),
     /** offerSetId: the offers on screen, or null when none are shown. */
     assist: (sessionId: string, message: string, offerSetId: number | null) =>
       call<AssistResult>("POST", "/assist", { sessionId, message, offerSetId }),

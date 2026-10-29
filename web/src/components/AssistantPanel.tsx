@@ -5,13 +5,16 @@ interface Props {
   messages: ChatMessage[];
   busy: boolean;
   onAsk: (message: string) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Questions that fit what's on screen, asked with one tap. */
+  starters: string[];
 }
 
 const OUTCOME_BADGES = { standard_explanation: "Standard explanation", redirected: "Fixed wording" } as const;
 
 /** The assistant, closed by default; the cards never depend on it (FR-9). */
-export function AssistantPanel({ messages, busy, onAsk }: Props) {
-  const [open, setOpen] = useState(false);
+export function AssistantPanel({ messages, busy, onAsk, open, onOpenChange, starters }: Props) {
   const [draft, setDraft] = useState("");
   const input = useRef<HTMLInputElement>(null);
 
@@ -21,7 +24,7 @@ export function AssistantPanel({ messages, busy, onAsk }: Props) {
 
   if (!open) {
     return (
-      <button type="button" className="assistant-toggle" onClick={() => setOpen(true)}>
+      <button type="button" className="assistant-toggle" onClick={() => onOpenChange(true)}>
         Ask the assistant
       </button>
     );
@@ -38,7 +41,7 @@ export function AssistantPanel({ messages, busy, onAsk }: Props) {
     <aside className="assistant" aria-label="Assistant">
       <header>
         <strong>Assistant</strong>
-        <button type="button" className="link" onClick={() => setOpen(false)}>
+        <button type="button" className="link" onClick={() => onOpenChange(false)}>
           Close
         </button>
       </header>
@@ -51,12 +54,21 @@ export function AssistantPanel({ messages, busy, onAsk }: Props) {
         ))}
         {busy && <li className="muted">Thinking…</li>}
       </ol>
+      {starters.length > 0 && (
+        <div className="starters" role="group" aria-label="Starter questions">
+          {starters.map((q) => (
+            <button key={q} type="button" className="starter" disabled={busy} onClick={() => onAsk(q)}>
+              {q}
+            </button>
+          ))}
+        </div>
+      )}
       <form onSubmit={submit}>
         <input
           ref={input}
           type="text"
           aria-label="Ask about the offers, or type new numbers"
-          placeholder={`"$30K roof, she can do $300 a month" or "Explain the promo"`}
+          placeholder={`"$30K roof, they can do $300 a month" or "Explain the promo"`}
           value={draft}
           maxLength={500}
           onChange={(e) => setDraft(e.target.value)}

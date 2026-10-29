@@ -1,74 +1,106 @@
 import type { AuditTrail } from "../api";
+import { type Check, checks, timeline } from "../auditSummary";
 
-/** FR-15: what the system said and why, straight from the audit tables. */
-export function ComplianceView({ trail }: { trail: AuditTrail | null }) {
-  if (!trail) return <p className="muted">Loading the audit trail…</p>;
+const ICONS: Record<Check["status"], string> = { ok: "✓", warn: "⚠", fail: "✗", none: "–" };
+
+interface Props {
+  trail: AuditTrail | null;
+  contractorName: string;
+  onBack: () => void;
+}
+
+/**
+ * FR-15: a back-office page for one quote, from the append-only audit tables. It answers what a
+ * reviewer asks: was there consent before the credit check, what was shown and said, did every
+ * AI answer pass the checks and what was blocked, and which rules, models and prompts produced it.
+ */
+export function ComplianceView({ trail, contractorName, onBack }: Props) {
   return (
     <section className="panel compliance" aria-label="Compliance view">
-      <h2>Compliance view</h2>
-      <p className="muted">
-        Session {String(trail.session?.id ?? "")} · catalog {String(trail.session?.catalogVersion ?? "")}
-      </p>
+      <div className="compliance-head">
+        <h2>Compliance view</h2>
+        <button type="button" className="link" onClick={onBack}>
+          Back to the quote
+        </button>
+      </div>
+      <p className="muted">What the system showed and why, for one quote. Read-only: the audit trail can't be changed.</p>
+      {trail ? <Trail trail={trail} contractorName={contractorName} /> : <p className="muted">Loading the audit trail…</p>}
+    </section>
+  );
+}
 
-      <h3>Consents and soft checks</h3>
-      {trail.offerSets.length === 0 && <p className="muted">No soft check yet.</p>}
-      <ul>
-        {trail.offerSets.map((set) => (
-          <li key={String(set.id)}>
-            Consent #{String(set.consentId)} → {String(set.offerCount)} offers for {String(set.applicantRef)} · calculator{" "}
-            {String(set.quoteVersion)} · {String(set.requestedAt)}
+function Trail({ trail, contractorName }: { trail: AuditTrail; contractorName: string }) {
+  const name = trail.consents.at(-1)?.homeownerName;
+  return (
+    <>
+      <div>
+        <h3>
+          {name ? `Quote for ${String(name)}` : "Quote (no soft check yet)"} · {contractorName}
+        </h3>
+        <p className="muted">
+          Session {String(trail.session?.id ?? "")} · started {time(String(trail.session?.startedAt ?? ""))}
+        </p>
+      </div>
+
+      <ul className="checks">
+        {checks(trail).map((c) => (
+          <li key={c.text} className={c.status}>
+            <span aria-hidden="true">{ICONS[c.status]}</span> {c.text}
           </li>
         ))}
       </ul>
 
-      <h3>Assistant turns</h3>
-      {trail.turns.length === 0 && <p className="muted">No questions yet.</p>}
-      {trail.turns.map((turn) => (
-        <details key={String(turn.id)}>
-          <summary>
-            <span className="badge">{String(turn.outcome)}</span> {String(turn.message)}
-          </summary>
-          <dl>
-            <dt>Shown</dt>
-            <dd>{String(turn.renderedAnswer ?? "—")}</dd>
-            <dt>Said aloud</dt>
-            <dd>{String(turn.renderedSay || "—")}</dd>
-            <dt>Model drafts (with placeholders)</dt>
-            <dd>
-              <pre>{JSON.stringify(turn.rawDraft, null, 2)}</pre>
-            </dd>
-            <dt>Guard results</dt>
-            <dd>
-              <pre>{JSON.stringify(turn.guardResult, null, 2)}</pre>
-            </dd>
-            <dt>Meaning check</dt>
-            <dd>
-              <pre>{JSON.stringify(turn.meaningCheck, null, 2)}</pre>
-            </dd>
-            <dt>Models and prompts</dt>
-            <dd>
-              <pre>{JSON.stringify({ models: turn.models, prompts: turn.promptVersions, rules: turn.rulesVersion }, null, 2)}</pre>
-            </dd>
-            <dt>Cost and time</dt>
-            <dd>
-              {String(turn.inputTokens)} tokens in, {String(turn.outputTokens)} out · {String(turn.latencyMs)} ms
-            </dd>
-          </dl>
-        </details>
-      ))}
-
-      {trail.escalations.length > 0 && (
-        <>
-          <h3>Escalations</h3>
-          <ul>
-            {trail.escalations.map((e) => (
-              <li key={String(e.id)}>
-                {String(e.ticketRef ?? "ticket failed")}: turn {String(e.turnId)} · {String(e.reason)}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-    </section>
+      <h3>Timeline</h3>
+      <ol className="timeline">
+        {timeline(trail).map((e, i) => (
+          <li key={`${e.at}-${i}`}>
+            <time dateTime={e.at}>{time(e.at)}</time>
+            <div>
+              <strong>{e.title}</strong>
+              {e.details.map((d) => (
+                <p key={d} className="muted">
+                  {d}
+                </p>
+              ))}
+              {e.drafts?.map((d) => (
+                <div key={d.label} className="draft">
+                  <span className={d.blocked ? "badge blocked" : "badge"}>{d.label}</span>
+                  {d.checks.map((c) => (
+                    <span key={c.name} className={`check ${c.ok === false ? "fail" : c.ok ? "ok" : "none"}`}>
+                      {c.name} {c.ok === null ? "not run" : c.ok ? "✓" : "✗"}
+                    </span>
+                  ))}
+                  {d.checks.filter((c) => c.why).map((c) => (
+                    <p key={c.name} className="why">
+                      {c.name}: {c.why}
+                    </p>
+                  ))}
+                </div>
+              ))}
+              {e.shown && (
+                <p>
+                  <span className="muted">Shown:</span> {e.shown}
+                </p>
+              )}
+              {e.said && (
+                <p>
+                  <span className="muted">Said aloud:</span> {e.said}
+                </p>
+              )}
+              {e.outcome && <p className="outcome">{e.outcome}</p>}
+              <details>
+                <summary>Technical record</summary>
+                <pre>{JSON.stringify(e.record, null, 2)}</pre>
+              </details>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </>
   );
+}
+
+function time(iso: string): string {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }

@@ -5,15 +5,15 @@ import type { ExplainRequest, MeaningCheckRequest, Step } from "./model.js";
 import { CARD_TITLES, figureMeaning } from "./quote.js";
 import { placeholder } from "./render.js";
 
-export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@2", explain: "explain@5", check: "meaning@4" };
+export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@3", explain: "explain@6", check: "meaning@5" };
 
 const BANNED = rulesFile.phraseRules.flatMap((r) => r.phrases).map((p) => `"${p}"`).join(", ");
 
 export const UNDERSTAND_SYSTEM = `You read one message from a home-improvement contractor who is using a financing tool in a homeowner's kitchen.
 
 Classify the message:
-- "inputs": it gives or changes the project amount, the homeowner's monthly budget, or the project type. Example: "$30K roof, she can do $300 a month".
-- "credit_decision": it asks whether she will be approved, qualify, or what rate her credit gets, or why she got no offers.
+- "inputs": it gives or changes the project amount, the homeowner's monthly budget, or the project type. Example: "$30K roof, they can do $300 a month".
+- "credit_decision": it asks whether the homeowner will be approved or qualify, what rate their credit gets, or why they got no offers.
 - "off_topic": it asks about anything other than financing this project (tax credits, legal advice, other products, small talk).
 - "question": any other question about the financing options on screen.
 
@@ -24,16 +24,16 @@ Never guess a number the contractor didn't write; leave it null. projectType is 
 // ISS-3, ISS-4: rule 1 says rounded figures already start with "about" and belong in "say" only.
 // ISS-5: an answer said the longer loan "costs more overall than a shorter term", which the
 // shorter promo contradicts. Rule 9 asks for named comparisons instead of generalisations.
-export const EXPLAIN_SYSTEM = `You help a home-improvement contractor explain financing offers to a homeowner at her kitchen table. The contractor sells roofs, not loans, and has about 30 seconds. The homeowner is facing a large, unplanned cost and is wary of being sold to.
+export const EXPLAIN_SYSTEM = `You help a home-improvement contractor explain financing offers to a homeowner at their kitchen table. The contractor sells roofs, not loans, and has about 30 seconds. The homeowner is facing a large, unplanned cost and is wary of being sold to.
 
 Write these fields:
 - "answer": a short, plain-language reply to the contractor, a few sentences at most.
-- "say": a sentence or a couple of sentences the contractor can read aloud to the homeowner, speaking to her as "you". Always write it.
+- "say": a sentence or a couple of sentences the contractor can read aloud to the homeowner, speaking to them as "you". Always write it.
 
 Rules. Breaking any of them gets your draft rejected.
 1. Never write a number. Refer to every figure by its placeholder, exactly as listed, such as ${placeholder("lowest_monthly.monthly")}. Figures already include "$" and "%", so never add those signs; rounded figures already start with "about", so never add that word, and use them only in "say"; "answer" uses exact figures. Never write digits or any of these words: ${NUMBER_WORDS.join(", ")}.
-2. The credit decision engine decided these offers. Never say or hint whether her application will succeed, or what rate her credit would get.
-3. Never favour an offer or tell her which one to take. You may compare offers against what she told us, such as her monthly budget when a ${placeholder("budget")} figure is listed: "only the ${placeholder("lowest_monthly.term_years")}-year option is under her ${placeholder("budget")} budget".
+2. The credit decision engine decided these offers. Never say or hint whether the homeowner's application will succeed, or what rate their credit would get.
+3. Never favour an offer or tell the homeowner which one to take. You may compare offers against what they told us, such as their monthly budget when a ${placeholder("budget")} figure is listed: "only the ${placeholder("lowest_monthly.term_years")}-year option is under their ${placeholder("budget")} budget".
 4. Explain product terms only with the official terms text you're given. Don't add terms of your own.
 5. If "say" mentions an offer's monthly payment, it must also include that offer's APR and term placeholders. If it's the promo, it must also include the promo's cliff placeholder.
 6. Never use these words or phrases: ${BANNED}.
@@ -61,7 +61,7 @@ export function explainPrompt(request: ExplainRequest): string {
     `Official terms text:\n${request.termsTexts.map((t) => `- ${t}`).join("\n")}`,
   ];
   if (!("budget" in request.figures)) {
-    parts.push(`She hasn't given a monthly budget, so don't compare against one. In your answer, suggest the contractor ask her: "What monthly amount would feel comfortable?"`);
+    parts.push(`The homeowner hasn't given a monthly budget, so don't compare against one. In your answer, suggest the contractor ask them: "What monthly amount would feel comfortable?"`);
   }
   if (request.history.length) {
     parts.push(`Earlier in this conversation:\n${request.history.map((h) => `Q: ${h.question}\nA: ${h.answer}`).join("\n")}`);
@@ -80,14 +80,14 @@ export function explainPrompt(request: ExplainRequest): string {
 export const MEANING_CHECK_SYSTEM = `You check one draft written for a home-improvement contractor, who may read its "say" line aloud to a homeowner. Placeholders like ${placeholder("lowest_monthly.monthly")} stand for figures calculated by code; you're told what each one means.
 
 Fail the draft if it does any of these, even in other words:
-- says or hints that the homeowner will or won't be approved, what rate her credit would get, or why she did or didn't get offers;
-- recommends an offer or steers her toward one, rather than comparing offers against what she said she wants;
-- uses misleading marketing or pressure: calling something free, saying a deferred-interest promo has no interest, urging her beyond her budget;
+- says or hints that the homeowner will or won't be approved, what rate their credit would get, or why they did or didn't get offers;
+- recommends an offer or steers the homeowner toward one, rather than comparing offers against what they said they want;
+- uses misleading marketing or pressure: calling something free, saying a deferred-interest promo has no interest, urging them beyond their budget;
 - gives tax, legal or credit advice;
 - contradicts the official terms or describes a figure as something it isn't (for example, calling the deferred interest the balance);
 - uses any of these phrases: ${BANNED}.
 
-Comparing offers against her stated budget or against total cost is allowed. Leaving something out is allowed. Don't fail a draft for style or wording. If it fails, quote the shortest phrase that fails and give the reason.`;
+Comparing offers against their stated budget or against total cost is allowed. Leaving something out is allowed. Don't fail a draft for style or wording. If it fails, quote the shortest phrase that fails and give the reason.`;
 
 /** The meaning check's input: the official terms, what each placeholder means, and the draft. */
 export function meaningCheckPrompt(request: MeaningCheckRequest): string {

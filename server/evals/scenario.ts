@@ -23,7 +23,7 @@ export async function scenario(name: ScenarioName) {
   audit.createSession(SESSION, CONTRACTOR, mockCatalog.version);
   if (!applicantRef) return { audit, offerSetId: null, cards: [], figures: {} };
 
-  const consentId = audit.recordConsent(SESSION, "eval-consent");
+  const consentId = audit.recordConsent(SESSION, "eval-consent", "Eval Homeowner");
   const offers = await new MockDecisionEngine().softCheck({ applicantRef, amount: 30_000 });
   const offerSetId = audit.recordOfferSet(
     SESSION,

@@ -20,7 +20,7 @@ let model: FakeModel;
 let tickets: { turnId: number; reason: string }[];
 
 async function softCheck(applicantRef: string, budget?: number) {
-  const consentId = audit.recordConsent("s1", "soft-check-v1");
+  const consentId = audit.recordConsent("s1", "soft-check-v1", "Maria Lopez");
   const offers = await new MockDecisionEngine().softCheck({ applicantRef, amount: 30_000 });
   return audit.recordOfferSet("s1", consentId, { amount: 30_000, budget, applicantRef, catalogVersion: mockCatalog.version, quoteVersion: "quote@1" }, offers);
 }

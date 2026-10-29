@@ -1,7 +1,9 @@
-import { money } from "../format";
+import { money, projectLabel } from "../format";
 import type { SuggestedInputs } from "../types";
 
 export interface Inputs {
+  /** Who the quote is for. Shown on screen and kept with the consent; never sent to the model. */
+  homeowner: string;
   amount: string;
   budget: string;
   projectType: string;
@@ -20,17 +22,22 @@ interface Props {
   noBudgetHint: string;
 }
 
-/** The only place numbers enter a quote (FR-13). Budget is optional (FR-8). */
+/** Step 1, and the only place numbers enter a quote (FR-13). Name and budget are optional for the ballpark (FR-8). */
 export function InputsPanel({ inputs, onChange, suggestion, onApply, onDismiss, noBudgetHint }: Props) {
   return (
     <section className="panel inputs" aria-label="Project">
       <div className="fields">
         <label>
+          Homeowner name
+          <input value={inputs.homeowner} placeholder="Maria Lopez" autoComplete="off" maxLength={100}
+            onChange={(e) => onChange({ ...inputs, homeowner: e.target.value })} />
+        </label>
+        <label>
           Project
           <select value={inputs.projectType} onChange={(e) => onChange({ ...inputs, projectType: e.target.value })}>
             {PROJECT_TYPES.map((p) => (
               <option key={p} value={p}>
-                {p === "hvac" ? "HVAC" : p[0]!.toUpperCase() + p.slice(1)}
+                {projectLabel(p)}
               </option>
             ))}
           </select>
