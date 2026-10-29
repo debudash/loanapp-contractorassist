@@ -32,6 +32,13 @@ export interface ExplainRequest {
   retryReasons: string[];
 }
 
+/** What the meaning check sees: the draft, the official terms and the figures it may refer to. */
+export interface MeaningCheckRequest {
+  draft: Draft;
+  termsTexts: string[];
+  figures: Figures;
+}
+
 export interface MeaningVerdict {
   pass: boolean;
   quote: string | null;
@@ -46,5 +53,5 @@ export interface Model {
   understand(message: string, signal: AbortSignal): Promise<{ value: Understanding; usage: Usage }>;
   explain(request: ExplainRequest, signal: AbortSignal): Promise<{ value: Draft; usage: Usage }>;
   /** Second layer of G-2/G-3: catches rewordings the phrase list misses. */
-  meaningCheck(draft: Draft, signal: AbortSignal): Promise<{ value: MeaningVerdict; usage: Usage }>;
+  meaningCheck(request: MeaningCheckRequest, signal: AbortSignal): Promise<{ value: MeaningVerdict; usage: Usage }>;
 }

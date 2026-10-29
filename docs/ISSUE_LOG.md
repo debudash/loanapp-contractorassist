@@ -1,0 +1,12 @@
+# Issue log
+
+Bugs found after a slice was merged. Each has a test written first, a comment at the fix site with its ID, and one commit with Issue / Root cause / Fix / Test. Where the fix is prompt wording, the unit test only checks the prompt; the live eval re-run is the real regression evidence ([EVALS.md](EVALS.md), raw results in [eval-runs/](eval-runs/)). Findings from a merge request's own review are recorded in that merge request.
+
+| ID | Found by | Issue | Root cause | Fix | Test | Commit |
+|---|---|---|---|---|---|---|
+| ISS-1 | First live eval run | 21% of ordinary questions ended in the standard explanation | The prompt's own wording ("approved terms", numbered cards, "two fields") and unchecked counts ("two offers") led the model to write words the guard blocks | Prompt avoids guarded words (checked by running the guard over it), lists cards by position word, asks for names instead of numbers or counts | `prompts.test.ts` (prompt check) + eval run 2: M-3 21% → 0% | `f4a1efe`, corrected in MR 8 |
+| ISS-2 | First live eval run | The meaning check failed true statements as "unsupported" | It never saw the terms text. The first fix told it to ignore accuracy, which the MR 8 review found left no runtime check against misleading claims | The check now gets the official terms and what each figure means, and fails contradictions and misdescribed figures only | `prompts.test.ts`, `assist.test.ts` (check receives terms and figures) | `e7a37e8`, corrected in MR 8 |
+| ISS-3 | First live eval run | "about about $24,000" on screen | Rounded figures already say "about"; nothing stopped the model adding it | G-1 rejects "about" before a rounded placeholder; prompt says so | `guard.test.ts` | `3ab4d0f` |
+| ISS-4 | First live eval run | The exact total was asked for, and a rounded total was given | The rule "rounded figures are for the spoken line" wasn't enforced | G-1 rejects a rounded placeholder in the answer; prompt says so | `guard.test.ts` | `38367ba` |
+| ISS-5 | First live eval run | "Costs more than a shorter term" when the shorter promo costs more | The prompt allowed comparisons without naming the offers | Prompt asks for named comparisons, no generalising | `prompts.test.ts` (prompt check) + eval run 2 | `39188aa` |
+| ISS-6 | First live eval run | The grounding judge failed correct answers | It couldn't tell the spoken line was for the homeowner, and the facts didn't define the cliff | Judge input labelled by audience; every figure named by its meaning | `facts.test.ts` | `895f749` |

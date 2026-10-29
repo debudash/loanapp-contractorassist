@@ -40,8 +40,28 @@ export function guard(draft: Draft, screen: Screen): { pass: boolean; failures: 
   const failures = [
     ...[draft.answer, draft.say].flatMap((text) => [...numberFidelity(text, screen), ...phrases(text, screen)]),
     ...spokenPayments(draft.say, screen),
+    ...roundedFigures(draft),
   ];
   return { pass: failures.length === 0, failures };
+}
+
+/**
+ * G-1 for rounded figures ("about $24,000"), one failure per placeholder:
+ * - ISS-4: they exist for the line said aloud; the answer the contractor reads uses exact
+ *   figures. "How much in total?" was answered with "about $69,000" instead of the card's total.
+ * - ISS-3: they already start with "about", so "about {{x.rounded}}" rendered "about about".
+ */
+function roundedFigures(draft: Draft): Failure[] {
+  const failures: Failure[] = [];
+  for (const { placeholder: quote, name } of placeholdersIn(draft.answer)) {
+    if (name.endsWith(".rounded")) failures.push({ rule: "G-1", reason: "rounded figure outside the spoken line", quote });
+  }
+  for (const { placeholder, name } of placeholdersIn(draft.say)) {
+    if (!name.endsWith(".rounded")) continue;
+    const doubled = new RegExp(`\\babout\\s+${placeholder.replace(/[.{}]/g, "\\$&")}`, "i").exec(draft.say);
+    if (doubled) failures.push({ rule: "G-1", reason: "rounded figure already says 'about'", quote: doubled[0] });
+  }
+  return failures;
 }
 
 // Number words the model might use to slip a figure past the digit check.

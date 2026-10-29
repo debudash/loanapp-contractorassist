@@ -1,5 +1,5 @@
 import type { Draft } from "../src/guard.js";
-import { type ExplainRequest, type MeaningVerdict, type Model, ModelUnavailable, type Understanding } from "../src/model.js";
+import { type ExplainRequest, type MeaningCheckRequest, type MeaningVerdict, type Model, ModelUnavailable, type Understanding } from "../src/model.js";
 
 // Every fake call reports the same usage, so a turn's tokens are 100 in and 20 out per call.
 const usage = { inputTokens: 100, outputTokens: 20 };
@@ -17,6 +17,7 @@ export class FakeModel implements Model {
   verdicts: MeaningVerdict[] = [];
   explainRequests: ExplainRequest[] = [];
   understandCalls: string[] = [];
+  checkRequests: MeaningCheckRequest[] = [];
   /** Make this step fail as the real adapter does when the API errors. */
   failOn?: Step;
   /** Make this step never answer, so only the deadline ends it. */
@@ -30,7 +31,8 @@ export class FakeModel implements Model {
     this.explainRequests.push(request);
     return this.next("explain", this.drafts, signal);
   }
-  meaningCheck(_draft: Draft, signal: AbortSignal) {
+  meaningCheck(request: MeaningCheckRequest, signal: AbortSignal) {
+    this.checkRequests.push(request);
     return this.next("meaningCheck", this.verdicts, signal);
   }
 

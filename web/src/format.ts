@@ -20,5 +20,5 @@ export const CARD_TITLES: Record<CardLabel, string> = {
   lowest_monthly: "Lowest monthly",
   promo: "Promo",
   next_lowest_total: "Next lowest total cost",
-  next_lowest_total_2: "Next lowest total cost",
+  next_lowest_total_2: "Another low total cost",
 };
