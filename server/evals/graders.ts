@@ -46,3 +46,14 @@ export function blockedReasons(turn: TurnChecks): string[] {
 export function fixedWordingUsed(text: string, fixedWording: Record<string, string>): string | undefined {
   return Object.entries(fixedWording).find(([, wording]) => wording === text)?.[0];
 }
+
+/** Words in shown text; a figure such as "$440.40" or "15.99%" is one word. */
+export function wordCount(text: string): number {
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
+/** Internal terms the homeowner shouldn't hear, singular or plural, in the order they appear. */
+export function jargonUsed(text: string): string[] {
+  return (text.match(/\b(cliff|figure|placeholder)s?\b/gi) ?? []).map((t) => t.toLowerCase());
+}
+

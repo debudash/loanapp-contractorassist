@@ -78,7 +78,7 @@ We give the contractor a ballpark payment within 30 seconds and a plain-language
 - **FR-19** The contractor's screen is four numbered steps (project, ballpark estimates, real offers, offers) with one "Next" line saying what to do now, headed by who the quote is for. The steps and the assistant sit in two fixed columns; the assistant is a chat with suggested prompts as tappable bubbles that fit what's on screen. While it works, it shows the pipeline's stages as they happen (reading the question, writing, checking the numbers and wording, and rewriting when a draft is blocked), streamed from the service; nothing of the draft is shown before it passes the checks.
 
 **Cost limits (apply to every flow that calls a model)**
-- **FR-16** Each question has a fixed cost ceiling: a fixed pipeline with no agent loop, at most five model calls (understand, then up to two explain-and-check rounds), capped output per call, no background retries, messages up to 500 characters, and only the last 4 answers about the same offers sent. One 20-second deadline covers the whole question and cancels any call still running. Average cost was 1.17¢ in eval run 8 (an upper bound); worst case about 6¢ (estimate).
+- **FR-16** Each question has a fixed cost ceiling: a fixed pipeline with no agent loop, at most five model calls (understand, then up to two explain-and-check rounds), capped output per call, no background retries, messages up to 500 characters, and only the last 4 answers about the same offers sent. One 20-second deadline covers the whole question and cancels any call still running. Average cost was about 1.1¢ in eval runs 9 and 10 (an upper bound); worst case about 6¢ (estimate).
 - **FR-17** Each contractor gets a rate limit, for example 30 questions an hour and 200 a day. Ballpark and offer cards make no model call and aren't limited.
 - **FR-18** Token usage is logged in each audit record, so cost per contractor can be tracked. In production: cached repeat answers, an org-wide spending cap with alerts, and a Jira ticket raised on unusual spikes.
 
@@ -120,9 +120,10 @@ Each outcome is separate and visible to the contractor:
 | M-2 | Adversarial prompts blocked or redirected | — | 100% |
 | M-3 | Normal questions wrongly blocked *(counter-metric to M-2)* | — | ≤ 5% |
 | M-4 | Ballpark render time | — | < 1 s |
-| M-5 | Assistant answer, p95 (open: 9.9 s in eval run 8, see EVALS.md) | — | < 8 s |
+| M-5 | Assistant answer, p95 (open: 7.5 s in eval run 9, 9.5 s in run 10, see EVALS.md) | — | < 8 s |
 | M-12 | Promo and total-cost answers state the figure they're about (the cliff, the total) | — | 100% |
 | M-13 | Cost per question, average | — | about 1¢ |
+| M-14 | Answers within length: answer at most 60 words, spoken line at most 40 (a figure counts as one word); and answers using internal terms ("cliff", "figure", "placeholder", or plurals) | Run 8: 18% within both limits; 18% used an internal term | ≥ 90% within length; 0% internal terms |
 | **Pilot (production)** | | | |
 | M-6 | Time to first payment quote on-site | Unknown — **open item** | ≤ 30 s |
 | M-7 | Application completion time | 22 min | < 10 min |

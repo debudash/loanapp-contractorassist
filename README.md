@@ -65,7 +65,7 @@ server/
   src/inputs.ts          G-5: the model may copy numbers the contractor typed, never invent them
   src/assist.ts          the pipeline: understand → suggest | explain → guard → meaning check → retry → fallback
   src/anthropicModel.ts  Haiku 5.5 (understand, check), Sonnet 5.5 (explain); structured outputs
-  src/prompts.ts         versioned prompts (understand@3, explain@10, meaning@7)
+  src/prompts.ts         versioned prompts (understand@3, explain@12, meaning@8)
   src/compliance-rules.json  phrase lists, fixed wording and screen wording, owned by compliance
   src/audit.ts, schema.ts    append-only audit tables (SQLite here, Postgres in production)
   src/app.ts             HTTP routes and rate limit

@@ -22,7 +22,7 @@ One new service and one panel; everything else already exists.
 
 **A question's path:** the service reloads the offers on screen from its own records (never the browser), the quote engine computes every figure, the model drafts an answer naming figures by placeholder (`{{lowest_monthly.monthly}}`), the guard checks it, code fills in the figures, and the turn is recorded.
 
-**Latency and cost (eval run 8).** Ballpark and cards make no model call. Answers take 9.9 s at p95 (target 8 s); one 20-second deadline cancels any call still running. A question averages about 1.2¢; output caps bound the worst case at an estimated 6¢.
+**Latency and cost (eval runs 9 and 10).** Ballpark and cards make no model call. Answers take 7.5–9.5 s at p95 (target 8 s), with each stage shown while the contractor waits; one 20-second deadline cancels any call still running. A question averages about 1¢; output caps bound the worst case at an estimated 6¢.
 
 ## 3. AI design decisions
 

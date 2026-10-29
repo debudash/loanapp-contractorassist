@@ -52,7 +52,7 @@ describe("explain prompt", () => {
     const prompt = explainPrompt(request);
 
     expect(prompt).toContain("{{diff.monthly}} = $90.55: how much more a month the lowest total cost offer is than the lowest monthly offer");
-    expect(prompt).toContain("{{promo.cliff}} = $4,409.69: deferred interest added if not paid off in time (the cliff)");
+    expect(prompt).toContain("{{promo.cliff}} = $4,409.69: deferred interest added if not paid off in time");
     expect(EXPLAIN_SYSTEM).toContain("A difference figure compares only the offers its meaning names");
   });
 
@@ -70,6 +70,15 @@ describe("explain prompt", () => {
     expect(EXPLAIN_SYSTEM).toContain("Put that suggestion in \"answer\" only");
     expect(EXPLAIN_SYSTEM).toContain("Never promise the homeowner a document, action or follow-up");
     expect(MEANING_CHECK_SYSTEM).toContain("promises the homeowner a document, action or follow-up");
+  });
+
+  // The owner's walkthrough: answers ran to about 55 words and spoken lines to about 52 (eval run 8),
+  // and "the cliff" reached the homeowner. Prompt check; the next eval run measures it.
+  it("asks for short answers in the homeowner's words, with no internal terms", () => {
+    expect(EXPLAIN_SYSTEM).toContain("at most 60 words");
+    expect(EXPLAIN_SYSTEM).toContain("at most 40 words");
+    expect(EXPLAIN_SYSTEM).toContain('Outside placeholders, never write "cliff", "figure" or "placeholder", or their plurals');
+    expect(Object.values(FIGURE_MEANINGS).join(" ")).not.toMatch(/\bcliff\b/i);
   });
 
   // ISS-5: found by the first live eval run. Prompt check; run 2 is the regression evidence.
@@ -95,7 +104,7 @@ describe("meaning check prompt", () => {
     });
 
     expect(prompt).toContain("Deferred interest: built-up interest is added if not paid off.");
-    expect(prompt).toContain("{{promo.cliff}} = deferred interest added if not paid off in time (the cliff)");
+    expect(prompt).toContain("{{promo.cliff}} = deferred interest added if not paid off in time");
   });
 });
 
