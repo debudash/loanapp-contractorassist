@@ -50,6 +50,28 @@ describe("AssistantPanel prompts", () => {
   });
 });
 
+describe("AssistantPanel progress", () => {
+  // The owner's request: show what's happening instead of "Thinking…".
+  it("shows each stage while the assistant works, including a rewrite after a blocked draft", () => {
+    render(
+      <Panel messages={[]} busy={true} onAsk={vi.fn()} stages={["reading", "writing", "checking", "rewriting"]}
+        asking="Explain the promo" starters={["Explain the promo", "What does APR mean?"]} />,
+    );
+    open();
+
+    // The question shows straight away, and its prompt isn't offered again while it's answered.
+    expect(screen.getByText("Explain the promo", { selector: ".bubble.mine" })).toBeDefined();
+    expect(within(screen.getByRole("group", { name: "Suggested prompts" })).queryByRole("button", { name: "Explain the promo" })).toBeNull();
+
+    const progress = screen.getByRole("list", { name: "What the assistant is doing" });
+    const state = (text: string) => within(progress).getByText(text).closest("li")!.dataset.state;
+    expect(state("Reading the question")).toBe("done");
+    expect(state("Rewriting: the first draft didn't pass a check")).toBe("current");
+    expect(state("Checking the numbers and wording")).toBe("pending");
+    expect(screen.queryByText("Thinking…")).toBeNull();
+  });
+});
+
 describe("InputsPanel suggestion (FR-13)", () => {
   // Review fix (slice 6, spec S8): found by spec review; suggestions belonged in the inputs panel.
   it("shows the assistant's suggestion beside the inputs and changes them only on Apply", () => {

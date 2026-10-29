@@ -29,9 +29,11 @@ beforeEach(() => {
   audit = new AuditStore(":memory:");
   model = new FakeModel();
   tickets = [];
+  stages = [];
   audit.createSession("s1", "c_summit", mockCatalog.version);
 });
 
+let stages: string[];
 const ask = (message: string, deadlineMs?: number) =>
   assist(
     { sessionId: "s1", contractorId: "c_summit", message },
@@ -39,6 +41,7 @@ const ask = (message: string, deadlineMs?: number) =>
       model,
       audit,
       catalog: mockCatalog,
+      onStage: (stage) => stages.push(stage),
       escalate: (turnId, reason) => {
         tickets.push({ turnId, reason });
         return `JSM-STUB-${turnId}`;
@@ -104,6 +107,25 @@ describe("assist: questions about the offers (lane 2)", () => {
       inputTokens: 300, // three calls at 100 each
       outputTokens: 60,
     });
+  });
+
+  // So the contractor sees what's happening instead of "Thinking…", including a rewrite.
+  it("reports each stage as it starts, including the rewrite after a blocked draft", async () => {
+    model.understandings.push(question);
+    model.drafts.push({ answer: "It's about $290 a month.", say: "" }, goodDraft);
+    model.verdicts.push(PASS);
+
+    await ask("What's the monthly?");
+
+    expect(stages).toEqual(["reading", "writing", "checking", "rewriting", "checking"]);
+  });
+
+  it("reports only reading for a message that never reaches the explain model", async () => {
+    model.understandings.push({ kind: "inputs", inputs: { amount: 25_000 } });
+
+    await ask("make it 25k");
+
+    expect(stages).toEqual(["reading"]);
   });
 
   // Review fix (slice 4, spec S6): found by spec review; a successful retry lost the first draft.

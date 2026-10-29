@@ -7,7 +7,7 @@ import { type Inputs, InputsPanel } from "./components/InputsPanel";
 import { OfferCards } from "./components/OfferCards";
 import { SoftCheck, TEST_PROFILES } from "./components/SoftCheck";
 import { money, projectLabel } from "./format";
-import type { BallparkResult, ChatMessage, OffersResult, SuggestedInputs, Wording } from "./types";
+import type { BallparkResult, ChatMessage, OffersResult, Stage, SuggestedInputs, Wording } from "./types";
 
 // Demo contractors; in the portal the signed-in contractor comes from authentication upstream.
 const CONTRACTORS = [
@@ -35,6 +35,8 @@ export function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [stages, setStages] = useState<Stage[]>([]);
+  const [asking, setAsking] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<"quote" | "compliance">("quote");
   const [trail, setTrail] = useState<AuditTrail | null>(null);
@@ -118,12 +120,15 @@ export function App() {
     guarded(async () => {
       if (!sessionId) return;
       setBusy(true);
+      setAsking(message);
+      setStages([]);
       try {
-        const result = await api.assist(sessionId, message, offers?.offerSetId ?? null);
+        const result = await api.assist(sessionId, message, offers?.offerSetId ?? null, (stage) => setStages((s) => [...s, stage]));
         setMessages((m) => [...m, { question: message, result }]);
         if (result.kind === "suggestion") setSuggestion(result.inputs);
       } finally {
         setBusy(false);
+        setAsking(null);
         setAuditVersion((v) => v + 1);
       }
     });
@@ -283,6 +288,8 @@ export function App() {
             <AssistantPanel
               messages={messages}
               busy={busy}
+              asking={asking}
+              stages={stages}
               onAsk={ask}
               open={assistantOpen}
               onOpenChange={setAssistantOpen}

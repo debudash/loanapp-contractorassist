@@ -38,6 +38,52 @@ describe("POST /api/assist", () => {
     expect(res.body).toMatchObject({ kind: "answer", outcome: "redirected" });
   });
 
+  // The UI shows each stage as it happens; the plain JSON answer stays for every other caller.
+  it("streams each stage, then the result, as JSON lines when the client asks for them", async () => {
+    const { model, sessionId, app } = await setup();
+    model.understandings.push(credit);
+
+    const res = await request(app)
+      .post("/api/assist")
+      .set({ ...asSummit, accept: "application/x-ndjson" })
+      .send({ sessionId, message: "Will she qualify?" });
+
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toContain("application/x-ndjson");
+    expect(res.headers["x-accel-buffering"]).toBe("no"); // so nginx passes each line straight on
+    const lines = res.text.trim().split("\n").map((line) => JSON.parse(line));
+    expect(lines).toEqual([{ stage: "reading" }, { result: expect.objectContaining({ kind: "answer", outcome: "redirected" }) }]);
+  });
+
+  // MR 20 review: once a stream has started its status is sent, so a defect must end it with an error line.
+  it("ends a stream with an error line when something other than the model fails", async () => {
+    const model = new FakeModel();
+    model.understand = async () => {
+      throw new Error("a defect, not a model failure");
+    };
+    const { sessionId, app } = await setup({ model });
+
+    const res = await request(app)
+      .post("/api/assist")
+      .set({ ...asSummit, accept: "application/x-ndjson" })
+      .send({ sessionId, message: "Explain the promo" });
+
+    expect(res.text.trim().split("\n").map((line) => JSON.parse(line))).toEqual([{ stage: "reading" }, { error: "internal_error" }]);
+  });
+
+  // MR 20 review: an Accept header listing other types too still gets the stream.
+  it("streams when the Accept header lists JSON lines among other types", async () => {
+    const { model, sessionId, app } = await setup();
+    model.understandings.push(credit);
+
+    const res = await request(app)
+      .post("/api/assist")
+      .set({ ...asSummit, accept: "application/x-ndjson, */*" })
+      .send({ sessionId, message: "Will she qualify?" });
+
+    expect(res.headers["content-type"]).toContain("application/x-ndjson");
+  });
+
   it("stops a contractor at the hourly limit, and records the refusal (FR-17)", async () => {
     const { model, ask, trail } = await setup({ limits: { perHour: 2, perDay: 200 } });
     model.understandings.push(credit, credit);
