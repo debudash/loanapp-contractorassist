@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractionMatches, missingMentions, untraceableNumbers } from "../evals/graders.js";
+import { blockedReasons, extractionMatches, missingMentions, untraceableNumbers } from "../evals/graders.js";
 
 const figures = {
   "lowest_monthly.monthly": "$289.31",
@@ -44,5 +44,28 @@ describe("missingMentions", () => {
   it("lists required figures the shown text leaves out", () => {
     expect(missingMentions("If she doesn't pay it off, interest is added.", ["$4,409.69"])).toEqual(["$4,409.69"]);
     expect(missingMentions("If not, $4,409.69 is added.", ["$4,409.69"])).toEqual([]);
+  });
+});
+
+// Eval run 6 blocked an ordinary question once, and the run kept no record of why.
+describe("blockedReasons", () => {
+  it("says why each blocked draft was blocked, by the guard or the meaning check", () => {
+    const turn = {
+      guardResult: [
+        { pass: false, failures: [{ rule: "G-1", reason: "number written by the model", quote: "two" }] },
+        { pass: true, failures: [] },
+      ],
+      meaningCheck: [null, { pass: false, quote: "the smart choice", reason: "steers toward an offer" }],
+    };
+
+    expect(blockedReasons(turn)).toEqual([
+      'Draft 1: G-1 "two" (number written by the model)',
+      'Draft 2: meaning check "the smart choice" (steers toward an offer)',
+    ]);
+  });
+
+  it("lists nothing for a draft that passed, or a turn that never reached the model", () => {
+    expect(blockedReasons({ guardResult: [{ pass: true, failures: [] }], meaningCheck: [{ pass: true }] })).toEqual([]);
+    expect(blockedReasons({ guardResult: [], meaningCheck: [] })).toEqual([]);
   });
 });

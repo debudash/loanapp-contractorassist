@@ -1,7 +1,9 @@
 // Eval suite against the real models: docker compose run --rm evals
 // Every case runs through the real assist() pipeline on one of four screens, EVAL_REPEATS
 // times, and is graded in code where possible and by a stronger judge model otherwise.
-// Writes evals/results/latest.json and latest.md.
+// Writes evals/results/latest.json and latest.md. Each question in latest.json keeps its trace:
+// every draft the model wrote and each check's result. EVAL_SET=benign (or adversarial,
+// conversation, extraction) runs one set only, to chase a single failure cheaply.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { AnthropicModel } from "../src/anthropicModel.js";
 import { assist, type AssistResult } from "../src/assist.js";
@@ -10,7 +12,7 @@ import { mockCatalog } from "../src/mocks/catalog.js";
 import { ballpark } from "../src/quote.js";
 import cases from "./cases.json" with { type: "json" };
 import { screenFacts, shownForJudge } from "./facts.js";
-import { extractionMatches, missingMentions, untraceableNumbers } from "./graders.js";
+import { blockedReasons, extractionMatches, missingMentions, type TurnChecks, untraceableNumbers } from "./graders.js";
 import { JUDGE_MODEL, judgeGrounding, judgeSafety, judgeSpend, type Verdict } from "./judge.js";
 import { CONTRACTOR, SESSION, scenario, type ScenarioName } from "./scenario.js";
 
@@ -20,6 +22,8 @@ if (!process.env.ANTHROPIC_API_KEY) {
 }
 
 const REPEATS = Number(process.env.EVAL_REPEATS ?? 2); // nondeterministic answers: each case runs more than once
+const SET = process.env.EVAL_SET; // undefined runs every set
+const runs = (set: string) => SET === undefined || SET === set;
 const model = new AnthropicModel();
 const TERMS = [...new Set(mockCatalog.productsFor(CONTRACTOR).map((p) => p.termsText))];
 const PRICE = { sonnet: { input: 2, output: 10 }, haiku: { input: 0.1, output: 0.5 } }; // $ per million tokens
@@ -41,6 +45,10 @@ interface QuestionRow {
   safety: Verdict | null;
   latencyMs: number;
   costDollars: number;
+  /** Why each blocked draft was blocked; empty when the first draft passed. */
+  blocked: string[];
+  /** What happened inside the turn: each draft (with placeholders), guard result and meaning check. */
+  trace: { drafts: unknown; guard: unknown; meaning: unknown; models: unknown; prompts: unknown };
 }
 
 interface ExtractionRow {
@@ -99,6 +107,8 @@ async function gradeQuestion(set: QuestionRow["set"], name: ScenarioName, messag
     safety: set === "adversarial" && outcome !== "unavailable" ? await judgeSafety(question, shown) : null,
     latencyMs,
     costDollars: turnCost(turn),
+    blocked: blockedReasons(turn as unknown as TurnChecks),
+    trace: { drafts: turn.rawDraft, guard: turn.guardResult, meaning: turn.meaningCheck, models: turn.models, prompts: turn.promptVersions },
   };
   const mark = row.safety?.pass === false || row.grounding?.pass === false || row.untraceable.length || row.missing.length ? "FAIL" : "ok  ";
   console.log(`  ${mark} ${outcome.padEnd(20)} [${name}] ${row.message}`);
@@ -110,13 +120,13 @@ const extraction: ExtractionRow[] = [];
 
 for (let run = 1; run <= REPEATS; run++) {
   console.log(`\nRun ${run} of ${REPEATS}`);
-  for (const c of cases.questions) {
+  for (const c of cases.questions.filter((c) => runs(c.set))) {
     questions.push(await gradeQuestion(c.set as QuestionRow["set"], c.scenario as ScenarioName, [c.message], c.kind, c.mustMention));
   }
-  for (const c of cases.conversations) {
+  for (const c of runs("conversation") ? cases.conversations : []) {
     questions.push(await gradeQuestion("conversation", c.scenario as ScenarioName, c.turns));
   }
-  for (const c of cases.extraction) {
+  for (const c of runs("extraction") ? cases.extraction : []) {
     const { result, turn } = await runCase("ballpark", [c.message]);
     const actual = result.kind === "suggestion" ? result.inputs : {};
     const pass = extractionMatches(actual, c.expected);
@@ -165,7 +175,7 @@ const metrics = [
 const failures = [
   ...questions
     .filter((q) => q.outcome === "unavailable" || q.safety?.pass === false || q.grounding?.pass === false || q.untraceable.length || q.missing.length || (q.set === "benign" && q.outcome !== "answered"))
-    .map((q) => `- **${q.set}** [${q.scenario}] "${q.message}" → ${q.outcome}${q.safety?.problem ? `: ${q.safety.problem}` : ""}${q.grounding?.problem ? `: ${q.grounding.problem}` : ""}${q.untraceable.length ? ` untraceable ${q.untraceable.join(", ")}` : ""}${q.missing.length ? ` missing ${q.missing.join(", ")}` : ""}`),
+    .map((q) => `- **${q.set}** [${q.scenario}] "${q.message}" → ${q.outcome}${q.safety?.problem ? `: ${q.safety.problem}` : ""}${q.grounding?.problem ? `: ${q.grounding.problem}` : ""}${q.untraceable.length ? ` untraceable ${q.untraceable.join(", ")}` : ""}${q.missing.length ? ` missing ${q.missing.join(", ")}` : ""}${q.outcome !== "answered" && q.blocked.length ? ` · blocked: ${q.blocked.join("; ")}` : ""}`),
   ...extraction.filter((e) => !e.pass).map((e) => `- **extraction** "${e.message}" → got ${JSON.stringify(e.actual)}, expected ${JSON.stringify(e.expected)}`),
 ];
 
@@ -173,7 +183,7 @@ const ranAt = new Date().toISOString();
 const md = [
   `# Eval results`,
   ``,
-  `Run ${ranAt} · ${REPEATS} runs per case · models ${JSON.stringify(model.names)} · judge ${JUDGE_MODEL}`,
+  `Run ${ranAt} · ${REPEATS} runs per case${SET ? ` · ${SET} cases only` : ""} · models ${JSON.stringify(model.names)} · judge ${JUDGE_MODEL}`,
   ``,
   `| ID | Metric | Result | Target |`,
   `|---|---|---|---|`,
@@ -185,6 +195,6 @@ const md = [
 ].join("\n");
 
 mkdirSync("evals/results", { recursive: true });
-writeFileSync("evals/results/latest.json", JSON.stringify({ ranAt, repeats: REPEATS, judge: JUDGE_MODEL, models: model.names, metrics, questions, extraction }, null, 2));
+writeFileSync("evals/results/latest.json", JSON.stringify({ ranAt, repeats: REPEATS, set: SET ?? "all", judge: JUDGE_MODEL, models: model.names, metrics, questions, extraction }, null, 2));
 writeFileSync("evals/results/latest.md", md + "\n");
 console.log(`\n${md}`);
