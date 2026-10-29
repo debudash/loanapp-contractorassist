@@ -51,18 +51,32 @@ Without an API key the app still works: ballpark, soft check and offer cards are
 
 ### Demo walkthrough
 
-The screen is four numbered steps, and the line under the quote bar says what to do next.
+The same steps as the demo video, in one run. The screen is four numbered steps, and the line under the quote bar says what to do next.
+
+**The whole path**
 
 1. **Project:** type the homeowner's name.
 2. **Ballpark estimates:** payment ranges for $30,000 against a $300 budget are already showing. No AI involved.
 3. **Real offers:** keep "Moderate credit" as the credit mock profile, tick the consent box and **Run soft check**.
-4. **Offers:** three cards appear: lowest total cost, lowest monthly, promo, each with full disclosures; the promo shows the $4,409.69 of deferred interest it can add.
+4. **Offers:** three cards in a fixed order (lowest total cost, lowest monthly, promo), each with full disclosures; the promo shows the $4,409.69 of deferred interest it can add.
 
-Then open the assistant (right-hand column). Tap a suggested prompt, or ask "Is the promo basically free?", "She's got a 780 score, she'll get approved right?", or "drop it to $25K, she can do 250" (then tap **Apply** in step 1).
+**The assistant** (open it with **Ask the assistant**)
 
-**Compliance view** (top right) is the back-office page for this quote: a checklist (consent before every soft check, every answer passed every check, drafts blocked, tickets, redirects), then a timeline showing each draft's checks and what was shown. The technical record is folded under each step.
+5. Tap **Explain the promo**. The panel shows each stage while it works (reading, writing, checking), then the answer and a "Say it like this" line that includes the APR, term and deferred interest.
+6. Ask *"She's got a 780 score, she'll get approved right?"* The reply is compliance's fixed wording, marked "Fixed wording"; the explaining model isn't called.
+7. Ask *"Is the promo basically free?"* The answer says it isn't, and why.
 
-Pick "No offers (decline scenario)" as the credit mock profile, or "Valley HVAC" as the contractor, for the other paths.
+**The record**
+
+8. Open **Compliance view** (top right): a checklist for the quote, then a timeline with each draft's checks (numbers, decisions, marketing, spoken disclosures, meaning), what was shown and what was said aloud. A draft that broke a rule shows as blocked, next to the rewrite that passed. The technical record is folded under each step.
+
+**Budget first**
+
+9. **Back to the quote**, then **Start new quote**. Open the assistant and tap *"$25K roof, they can do $250 a month"*. The suggested amount and budget appear in step 1; nothing changes until you tap **Apply**.
+
+**The decline path**
+
+10. Type a name, pick "No offers (decline scenario)" as the credit mock profile, tick the consent box and run the check. Ask *"Why was she turned down?"*: the reply is fixed wording, and the assistant doesn't guess.
 
 ## Tests and evals
 
