@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-28.7",
+  "version": "2026-10-28.8",
   "phraseRules": [
     {
       "rule": "G-2",
@@ -65,6 +65,7 @@
     "consent": "The homeowner has agreed to a soft credit check. It shows the offers the lender can make, if any.",
     "ballparkFinePrint": "Estimates from {aprMin}%\u2013{aprMax}% APR across the fixed-rate products you offer. The homeowner's rate depends on a credit review; this is not an offer of credit. Promo offers appear only with real offers, with their full terms.",
     "promoCliff": "Pay off {payoff} within {months} months and the built-up interest isn't charged. If not, {cliff} of deferred interest is added.",
+    "noOffersNotice": "No offers came back from this check. The lender will send the homeowner a notice explaining why.",
     "noBudgetHint": "No budget yet. Ask the homeowner: \"What monthly amount would feel comfortable?\""
   }
 }

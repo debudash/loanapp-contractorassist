@@ -134,7 +134,9 @@ describe("POST /api/offers wording", () => {
     const res = await request(app).post("/api/offers").set(asSummit)
       .send({ sessionId, amount: 30_000, applicantRef: "no_offers", consent: { given: true, textVersion: "v1", homeownerName: "Maria Lopez" } });
 
-    expect(res.body.message).toBe(rules.fixedWording.noOffers);
+    // The screen's notice has no "I"; the assistant's own reply after a decline stays fixedWording.noOffers.
+    expect(res.body.message).toBe(rules.uiWording.noOffersNotice);
+    expect(res.body.message).not.toMatch(/\bI\b/);
   });
 });
 
