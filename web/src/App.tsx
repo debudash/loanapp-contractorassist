@@ -159,8 +159,8 @@ export function App() {
     step === 1 ? "enter the project amount to see a ballpark."
     : step === 4 ? `walk ${who} through the offers. Need help explaining? Ask the assistant.`
     : offers?.noOffers ? "no offers came back from this check. See the note in step 3."
-    : homeowner ? `share the ballpark with ${who}. When ${who} wants real offers, ask for permission in step 3.`
-    : "share the ballpark. For real offers, add the homeowner's name in step 1, then ask for permission in step 3.";
+    : homeowner ? `share the ballpark estimates with ${who}. When ${who} wants real offers, ask for permission in step 3.`
+    : "share the ballpark estimates. For real offers, add the homeowner's name in step 1, then ask for permission in step 3.";
 
   const labels = new Set(offers?.cards.map((c) => c.label));
   // Before offers the assistant has nothing to explain, so the starter shows typing numbers the way homeowners talk.
@@ -237,7 +237,7 @@ export function App() {
                   noBudgetHint={wording?.uiWording.noBudgetHint ?? ""}
                 />
               </Step>
-              <Step n={2} title="Ballpark" current={step}>
+              <Step n={2} title="Ballpark estimates" current={step}>
                 <Ballpark
                   result={ballpark}
                   hint={amountHint ?? budgetHint}

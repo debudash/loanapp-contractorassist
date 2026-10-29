@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { type ComponentProps, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AssistantPanel } from "../src/components/AssistantPanel";
@@ -28,6 +28,25 @@ describe("AssistantPanel", () => {
     open();
 
     expect(screen.getByText("Standard explanation")).toBeDefined();
+  });
+});
+
+describe("AssistantPanel prompts", () => {
+  // Found in the owner's walkthrough: a suggested prompt stayed after it was asked, repeating the question.
+  it("shows suggested prompts as tappable bubbles, and hides one once it has been asked", () => {
+    const onAsk = vi.fn();
+    const asked: ChatMessage[] = [{ question: "Explain the promo", result: { kind: "answer", outcome: "answered", answer: "…", say: "" } }];
+    render(<Panel messages={asked} busy={false} onAsk={onAsk} starters={["Explain the promo", "What does the finance charge mean?"]} />);
+    open();
+
+    const prompts = screen.getByRole("group", { name: "Suggested prompts" });
+    expect(within(prompts).queryByRole("button", { name: "Explain the promo" })).toBeNull();
+    const bubble = within(prompts).getByRole("button", { name: "What does the finance charge mean?" });
+    bubble.focus();
+    fireEvent.click(bubble);
+    expect(onAsk).toHaveBeenCalledWith("What does the finance charge mean?");
+    // MR 12 review: the tapped bubble can disappear, so focus moves to the input instead of the page.
+    expect(document.activeElement).toBe(screen.getByRole("textbox"));
   });
 });
 
