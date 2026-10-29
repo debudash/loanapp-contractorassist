@@ -4,14 +4,16 @@ How the assistant is measured against the real models, and the latest results.
 
 ## Status
 
-Run live twice on 2026-10-29: once as built, and again after fixing the six issues the first run found ([ISSUE_LOG.md](ISSUE_LOG.md)). To run it yourself, add an Anthropic API key:
+Run live four times on 2026-10-29. Run 1 was the code as built; runs 2 to 4 measured the fixes for what each run found (ISS-1 to ISS-6 in [ISSUE_LOG.md](ISSUE_LOG.md), and the fixes made during MR 8's review). Run 4 meets every quality target; answer time does not. Raw results: [eval-runs/](eval-runs/) (run 1 has only its summary).
+
+To run it yourself, add an Anthropic API key:
 
 ```bash
 cp .env.example .env      # add ANTHROPIC_API_KEY
 docker compose run --rm evals
 ```
 
-A run writes `server/evals/results/latest.md` (copy its table into the Results section below) and `latest.json` (every case, every verdict). Set `EVAL_REPEATS` to change how many times each case runs (default 2).
+A run writes `server/evals/results/latest.md` and `latest.json`. Set `EVAL_REPEATS` to change how many times each case runs (default 2).
 
 ## What runs
 
@@ -52,32 +54,34 @@ Every case goes through the real `assist()` pipeline with the real models (Haiku
 
 ## Results
 
-Two runs per case, 84 graded turns per run. Run 2 changed the model's prompts and the judge's input (ISS-6), so the grounding figures aren't strictly comparable between runs. Raw results: [eval-runs/](eval-runs/). Models under test: Claude Haiku 5.5 (understand, check) and Claude Sonnet 5.5 (explain). Judge: Claude Opus 5.5. No unavailable turns and no judge failures in either run.
+Two runs per case, 84 graded turns per run. Models under test: Claude Haiku 5.5 (understand, check) and Claude Sonnet 5.5 (explain). Judge: Claude Opus 5.5. No unavailable turns and no judge failures in any run. Runs 2 to 4 also changed the judge's input (ISS-6, product types), so grounding figures aren't strictly comparable between runs.
 
-| ID | Metric | Run 1 (as built) | Run 2 (after ISS-1 to ISS-6) | Target |
-|---|---|---|---|---|
-| M-1 | Shown numbers traceable to figures | 100% | 100% | 100% |
-| M-1 | Answers grounded, each figure tied to the right offer (judge) | 86% | **92%** | 100% |
-| M-1 | First drafts that broke G-1 (caught by the guard) | 16% | 9% | watch |
-| M-2 | Adversarial prompts handled safely (judge) | 100% | 100% | 100% |
-| M-3 | Benign questions blocked | 21% | **0%** | ≤ 5% |
-| M-4 | Ballpark compute time, p95 | 0.03 ms | 0.02 ms | < 1 s |
-| M-5 | Assistant answer time, p95 | 10.9 s | **9.9 s** | < 8 s |
-| M-12 | Promo and total answers state the required figure | 88% | 100% | 100% |
-| G-5 | Extraction exact, nothing invented | 100% | 100% | 100% |
-| F-2 | Questions ending in the standard explanation | 23% | 7% | watch |
-| F-2 | Retries that rescued the answer | 41% | 67% | watch |
-| M-13 | Cost per question, average (upper bound) | 0.95¢ | 1.00¢ | about 1¢ |
-| eval | Judge spend for the run | $0.39 | $0.43 | — |
+| ID | Metric | Run 1 | Run 2 | Run 3 | **Run 4** | Target |
+|---|---|---|---|---|---|---|
+| M-1 | Answers grounded, each figure tied to the right offer (judge) | 86% | 92% | 88% | **100%** | 100% |
+| M-1 | Shown numbers traceable to figures | 100% | 100% | 100% | **100%** | 100% |
+| M-1 | First drafts that broke G-1 (caught by the guard) | 16% | 9% | 12% | **5%** | watch |
+| M-2 | Adversarial prompts handled safely (judge) | 100% | 100% | 100% | **100%** | 100% |
+| M-3 | Benign questions blocked | 21% | 0% | 0% | **0%** | ≤ 5% |
+| M-4 | Ballpark compute time, p95 | 0.03 ms | 0.02 ms | 0.01 ms | **0.02 ms** | < 1 s |
+| M-5 | Assistant answer time, p95 | 10.9 s | 9.9 s | 11.0 s | **10.7 s** | < 8 s |
+| M-12 | Promo and total answers state the required figure | 88% | 100% | 100% | **100%** | 100% |
+| G-5 | Extraction exact, nothing invented | 100% | 100% | 100% | **100%** | 100% |
+| F-2 | Questions ending in the standard explanation | 23% | 7% | 9% | **5%** | watch |
+| F-2 | Retries that rescued the answer | 41% | 67% | 60% | **67%** | watch |
+| M-13 | Cost per question, average (upper bound) | 0.95¢ | 1.00¢ | 1.17¢ | **1.11¢** | about 1¢ |
+| eval | Judge spend for the run | $0.39 | $0.43 | $0.41 | **$0.39** | — |
 
-**What the first run found.** Every blocked question was a false positive: the prompt's own words ("approved terms", numbered cards) led the model to write words the guard rejects, and the meaning check judged accuracy it couldn't see. Grounding failures were split between real model faults ("about about", a rounded total where the exact one was asked, an over-general comparison) and an eval setup that didn't tell the judge which line is read aloud. Each became an issue with a failing test first: ISS-1 to ISS-6.
+**What each run found.**
 
-**Still missing in run 2, and why.**
+- **Run 1:** every blocked question was a false positive. The prompt's own words ("approved terms", numbered cards) led the model to write words the guard rejects, and the meaning check judged accuracy it couldn't see. There were also real grounding faults ("about about", a rounded total where the exact one was asked, an over-general comparison) and an eval setup that didn't tell the judge which line is read aloud. These became ISS-1 to ISS-6.
+- **Run 2:** M-3 fell to 0% and M-12 reached 100%. The MR 8 review then found the ISS-2 fix had left no runtime check against misleading claims; the meaning check now gets the official terms and what each figure means.
+- **Run 3:** the stricter meaning check held safety at 100%. Grounding dipped because the judge's facts didn't say which offers are fixed-rate.
+- **Run 4:** with that fixed, every quality target is met.
 
-- **Grounding, 92% (2 of 26 answered).** Both are real faults in the line read aloud. One said the interest "gets added to the balance, which is $4,409.69", which a homeowner could hear as the balance. The other spoke about the homeowner as "her" in a line addressed to her. The MR 8 review also found that the ISS-2 fix had left no runtime check for misleading claims like the first; the meaning check now gets the official terms and what each figure means, and the spoken line is told to address her as "you".
-- **Answer time p95, 9.9 s against 8 s.** The slowest answers are the ones that needed a second draft (two explain-and-check rounds). Next step: fewer retries as first drafts improve (9% still break G-1), and streaming the answer so the contractor sees it start sooner.
+**Still open: answer time.** p95 is 10.7 s against 8 s. The slowest answers are those needing a second draft, and the meaning check now reads more context. The Phase 2 plan is to stream answers and cut second drafts ([ROADMAP.md](ROADMAP.md)).
 
-**Safety held in both runs:** every adversarial prompt (credit decisions, steering, "tell her it's free", made-up numbers, tax advice, prompt injection, post-decline questions) was handled safely, and no invented number reached the screen.
+**Safety held in every run:** every adversarial prompt (credit decisions, steering, "tell her it's free", made-up numbers, tax advice, prompt injection, post-decline questions) was handled safely, and no invented number reached the screen.
 
 ## In CI
 
