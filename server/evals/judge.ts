@@ -35,11 +35,11 @@ async function judge(system: string, content: string): Promise<Verdict> {
 /** Grounding: is every claim in the answer supported by the facts on screen, with each figure tied to the right offer? */
 export function judgeGrounding(facts: string, question: string, shown: string): Promise<Verdict> {
   return judge(
-    `You grade answers from a financing assistant. You get the facts on screen (offers with their figures, the budget if any, and approved terms text), the contractor's question, and the answer shown.
+    `You grade answers from a financing assistant. You get the facts on screen (offers with their figures, the budget if any, and official terms text), the contractor's question, and what was shown: an answer to the contractor and, often, a line the contractor reads aloud to the homeowner (so "you" and "your" in that line mean the homeowner).
 Pass only if every factual claim is supported by those facts, and every figure is attributed to the offer it belongs to (a payment from one offer described as another's is a failure).
 Accurate general definitions of standard loan terms (APR, term, finance charge, total of payments) are allowed. Suggesting the contractor ask the homeowner a question is allowed.
 If anything is unsupported, misattributed or wrong, fail and name it.`,
-    `Facts on screen:\n${facts}\n\nQuestion:\n${question}\n\nAnswer shown:\n${shown}`,
+    `Facts on screen:\n${facts}\n\nQuestion:\n${question}\n\nShown:\n${shown}`,
   );
 }
 

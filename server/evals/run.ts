@@ -7,8 +7,9 @@ import { AnthropicModel } from "../src/anthropicModel.js";
 import { assist, type AssistResult } from "../src/assist.js";
 import type { SuggestedInputs } from "../src/inputs.js";
 import { mockCatalog } from "../src/mocks/catalog.js";
-import { ballpark, type Card, CARD_TITLES, type Figures } from "../src/quote.js";
+import { ballpark } from "../src/quote.js";
 import cases from "./cases.json" with { type: "json" };
+import { screenFacts, shownForJudge } from "./facts.js";
 import { extractionMatches, missingMentions, untraceableNumbers } from "./graders.js";
 import { JUDGE_MODEL, judgeGrounding, judgeSafety, judgeSpend, type Verdict } from "./judge.js";
 import { CONTRACTOR, SESSION, scenario, type ScenarioName } from "./scenario.js";
@@ -20,6 +21,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
 
 const REPEATS = Number(process.env.EVAL_REPEATS ?? 2); // nondeterministic answers: each case runs more than once
 const model = new AnthropicModel();
+const TERMS = [...new Set(mockCatalog.productsFor(CONTRACTOR).map((p) => p.termsText))];
 const PRICE = { sonnet: { input: 2, output: 10 }, haiku: { input: 0.1, output: 0.5 } }; // $ per million tokens
 
 type Outcome = AssistResult extends infer R ? (R extends { outcome: infer O } ? O : R extends { kind: infer K } ? K : never) : never;
@@ -69,38 +71,16 @@ function outcomeOf(result: AssistResult): Outcome {
   return (result.kind === "answer" ? result.outcome : result.kind) as Outcome;
 }
 
-function shownText(result: AssistResult): string {
-  if (result.kind === "answer") return [result.answer, result.say].filter(Boolean).join("\n");
-  if (result.kind === "unavailable") return result.message;
-  return "";
-}
-
 /** Upper bound: a turn that reached the explain step is priced at Sonnet rates, others at Haiku rates. */
 function turnCost(turn: Record<string, unknown>): number {
   const price = (turn.models as Record<string, string> | null)?.explain ? PRICE.sonnet : PRICE.haiku;
   return ((turn.inputTokens as number) * price.input + (turn.outputTokens as number) * price.output) / 1e6;
 }
 
-/** The facts on screen, in words, for the grounding judge. */
-function screenFacts(cards: Card[], figures: Figures): string {
-  const offers = cards.map((card) => {
-    const own = Object.entries(figures)
-      .filter(([name]) => name.startsWith(`${card.label}.`) && !name.endsWith(".rounded"))
-      .map(([name, value]) => `${name.slice(card.label.length + 1)} ${value}`);
-    return `- ${CARD_TITLES[card.label]}: ${own.join("; ")}`;
-  });
-  const terms = [...new Set(mockCatalog.productsFor(CONTRACTOR).map((p) => p.termsText))];
-  return [
-    offers.length ? `Offers:\n${offers.join("\n")}` : "No offers on screen.",
-    figures.budget ? `Homeowner's monthly budget: ${figures.budget}` : "No monthly budget given.",
-    `Approved terms:\n${terms.map((t) => `- ${t}`).join("\n")}`,
-  ].join("\n");
-}
-
 async function gradeQuestion(set: QuestionRow["set"], name: ScenarioName, messages: string[], kind?: string, mustMention: string[] = []) {
   const { result, turn, screen, latencyMs } = await runCase(name, messages);
   const question = messages[messages.length - 1]!;
-  const shown = shownText(result);
+  const shown = shownForJudge(result);
   const outcome = outcomeOf(result);
   const answered = outcome === "answered";
   const guardResults = turn.guardResult as { failures: { rule: string }[] }[];
@@ -115,7 +95,7 @@ async function gradeQuestion(set: QuestionRow["set"], name: ScenarioName, messag
     missing: answered ? missingMentions(shown, mustMention) : [],
     firstDraftBrokeG1: guardResults[0]?.failures.some((f) => f.rule === "G-1") ?? false,
     attempts: turn.attempts as number,
-    grounding: answered && set !== "adversarial" ? await judgeGrounding(screenFacts(screen.cards, screen.figures), question, shown) : null,
+    grounding: answered && set !== "adversarial" ? await judgeGrounding(screenFacts(screen.cards, screen.figures, TERMS), question, shown) : null,
     safety: set === "adversarial" && outcome !== "unavailable" ? await judgeSafety(question, shown) : null,
     latencyMs,
     costDollars: turnCost(turn),
