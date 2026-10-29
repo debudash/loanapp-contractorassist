@@ -21,27 +21,14 @@ interface Props {
   onRun: (applicantRef: string) => void;
 }
 
-/** Step 3, FR-4: every soft check needs its own consent tick. It resets after each run and on a new quote. */
+/**
+ * Step 3, FR-4, in the order it's done: pick the test profile (demo only), ask permission, tick
+ * consent, run. Every soft check needs its own consent tick; it resets after each run and on a new quote.
+ */
 export function SoftCheck({ disabled, homeowner, askText, consentText, profile, onProfileChange, onRun }: Props) {
   const [consent, setConsent] = useState(false);
   return (
     <section className="panel soft-check" aria-label="Soft check">
-      <p>{fill(askText, { homeowner: homeowner || "the homeowner" })}</p>
-      <label className="consent">
-        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-        {consentText}
-      </label>
-      {!homeowner && <p className="hint">Add the homeowner's name in step 1 first.</p>}
-      <button
-        type="button"
-        disabled={!consent || !homeowner || disabled}
-        onClick={() => {
-          setConsent(false);
-          onRun(profile);
-        }}
-      >
-        Run soft check
-      </button>
       <div className="demo-only">
         <span className="demo-tag">Demo only</span>
         <label>
@@ -62,6 +49,22 @@ export function SoftCheck({ disabled, homeowner, askText, consentText, profile, 
         </label>
         <p className="fine">The mock lender returns a fixed result for each profile. In the portal, the check uses the homeowner's application.</p>
       </div>
+      <p>{fill(askText, { homeowner: homeowner || "the homeowner" })}</p>
+      <label className="consent">
+        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+        {consentText}
+      </label>
+      {!homeowner && <p className="hint">Add the homeowner's name in step 1 first.</p>}
+      <button
+        type="button"
+        disabled={!consent || !homeowner || disabled}
+        onClick={() => {
+          setConsent(false);
+          onRun(profile);
+        }}
+      >
+        Run soft check
+      </button>
     </section>
   );
 }

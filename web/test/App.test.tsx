@@ -92,6 +92,17 @@ describe("App", () => {
     await waitFor(() => expect(screen.queryByText("$379.86")).toBeNull());
   });
 
+  // Found in the owner's walkthrough: the profile came after the button, so the order to follow wasn't clear.
+  it("puts the steps of a soft check in the order they're done: profile, consent, run", async () => {
+    render(<App />);
+    const profile = await screen.findByLabelText("Test credit profile");
+    const consent = screen.getByRole("checkbox");
+    const run = screen.getByRole("button", { name: "Run soft check" });
+
+    expect(profile.compareDocumentPosition(consent) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(consent.compareDocumentPosition(run) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   // MR 9 spec review: offers stayed on screen under a new name, though the consent was another homeowner's.
   it("clears the offer cards when the homeowner's name changes", async () => {
     render(<App />);
