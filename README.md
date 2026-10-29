@@ -82,7 +82,7 @@ The same steps as the demo video, in one run. The screen is four numbered steps,
 ## Tests and evals
 
 ```bash
-docker compose run --rm test       # server: typecheck + 172 unit and HTTP tests, model faked at the boundary
+docker compose run --rm test       # server: typecheck + 177 unit and HTTP tests, model faked at the boundary
 docker compose run --rm web-test   # web: typecheck + 30 component, client and App tests
 docker compose run --rm evals      # real models: 42 cases on 4 screens, run twice; needs ANTHROPIC_API_KEY
 docker compose run --rm redteam    # Promptfoo red team against a throwaway API instance; needs ANTHROPIC_API_KEY
@@ -100,6 +100,8 @@ The red team ([redteam/](redteam/)) uses [Promptfoo](https://www.promptfoo.dev/)
 | `DB_PATH` | compose | SQLite audit store, in the `audit-data` volume. |
 | `PORT` | optional | API port inside the network; defaults to 4100. |
 | `RATE_LIMIT_PER_HOUR`, `RATE_LIMIT_PER_DAY` | optional | Questions per contractor; default 30 and 200. The red-team API raises them. |
+| `RATE_LIMIT_ALL_PER_DAY` | `fly.toml` | One cap on questions across all contractors in 24 hours; none by default. The public deployment sets 300, because anyone can send any contractor header there. |
+| `STATIC_DIR` | `Dockerfile` | The built web app, served by the API in the public deployment. Unset locally, where nginx serves it. |
 
 Ports on your machine: **5180** (web), **4100** (API). Contractor identity comes from the `x-contractor-id` header; in the portal, authentication happens upstream.
 
@@ -126,6 +128,19 @@ docs/      PRD, design, solution blueprint (PDF and HTML), architecture, data mo
 ```
 
 Architecture and sequence diagrams: [docs/architecture.md](docs/architecture.md). Tables: [docs/data-model.md](docs/data-model.md).
+
+## Deploy to Fly.io (the public demo)
+
+The root `Dockerfile` builds one image that serves the web app and the API from one port; `fly.toml` runs it on one always-on machine with the audit store on a volume. With [flyctl](https://fly.io/docs/flyctl/) signed in:
+
+```bash
+fly apps create gl-loanappassist
+fly volumes create audit_data --region iad --size 1 -y
+grep '^ANTHROPIC_API_KEY=' .env | fly secrets import   # the key goes to Fly secrets, never into the image
+fly deploy --ha=false                                  # one machine: the SQLite volume belongs to one machine
+```
+
+The assistant answers at most 300 questions a day across all visitors (`RATE_LIMIT_ALL_PER_DAY`); after that it says the demo's daily limit is reached, and the ballpark, cards and compliance view keep working.
 
 ## Deployment guide (production)
 

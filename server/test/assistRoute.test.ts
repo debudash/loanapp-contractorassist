@@ -106,6 +106,23 @@ describe("POST /api/assist", () => {
     expect((await ask()).status).toBe(429);
   });
 
+  // Public deployment: the contractor header is set by the caller, so one cap across everyone bounds model spend.
+  it("applies a daily cap across all contractors when one is set", async () => {
+    const { app, model, ask } = await setup({ limits: { perHour: 30, perDay: 200, allPerDay: 1 } });
+    model.understandings.push(credit);
+    await ask();
+
+    const asValley = { "x-contractor-id": "c_valley" };
+    const other = (await request(app).post("/api/sessions").set(asValley)).body.sessionId as string;
+    const res = await request(app).post("/api/assist").set(asValley).send({ sessionId: other, message: "Will he qualify?" });
+
+    expect(res.status).toBe(429);
+    expect(res.body).toEqual({ error: "rate_limited", message: "The assistant has reached today's limit for this demo. The cards and figures still work." });
+    expect(model.understandCalls).toHaveLength(1);
+    const refused = (await request(app).get(`/api/sessions/${other}/audit`).set(asValley)).body.turns;
+    expect(refused.map((t: { outcome: string }) => t.outcome)).toEqual(["rate_limited"]);
+  });
+
   // Review fix (slice 5, spec S1): found by spec review; parallel questions all passed the check.
   it("counts questions still in flight, so parallel requests can't pass the limit", async () => {
     const { model, ask } = await setup({ limits: { perHour: 2, perDay: 200 }, deadlineMs: 200 });
@@ -169,6 +186,12 @@ describe("POST /api/assist", () => {
 
   it("uses the default limits when none are given", () => {
     expect(DEFAULT_LIMITS).toEqual({ perHour: 30, perDay: 200 });
+  });
+
+  it("reads a cap across all contractors from the environment, with none by default", () => {
+    expect(limitsFromEnv({}).allPerDay).toBeUndefined();
+    expect(limitsFromEnv({ RATE_LIMIT_ALL_PER_DAY: "300" }).allPerDay).toBe(300);
+    expect(limitsFromEnv({ RATE_LIMIT_ALL_PER_DAY: "none" }).allPerDay).toBeUndefined();
   });
 
   // The red-team run uses its own API instance, which needs more questions than a contractor gets.
