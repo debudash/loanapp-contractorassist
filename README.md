@@ -35,6 +35,7 @@ One question, answered end to end, by one service a small team can run. A homeow
 | Document extraction | Saves back-office time but doesn't help in the kitchen (Phase 2) |
 | Income verification | A flow problem with Plaid more than an AI problem |
 | A self-reported credit band | Would set expectations the lender may not meet; the soft check gives real offers |
+| A quotes list for the contractor | The portal already lists applications; the assistant panel opens from there |
 
 ## Run it
 
