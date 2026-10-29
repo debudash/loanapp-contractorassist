@@ -57,5 +57,42 @@ services:
       - ./server/evals:/app/evals
       - ./server/tsconfig.json:/app/tsconfig.json
 
+  # Red-team target: its own assistant service with a throwaway audit store and room for
+  # many questions, so a run never touches the demo's data or trips a contractor's limit.
+  redteam-api:
+    build: { context: ./server, target: runtime }
+    init: true
+    profiles: ["tools"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DB_PATH: /tmp/redteam.db
+      RATE_LIMIT_PER_HOUR: "2000"
+      RATE_LIMIT_PER_DAY: "5000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4100/health"]
+      interval: 2s
+      retries: 15
+
+  # Promptfoo red team against redteam-api; needs ANTHROPIC_API_KEY in .env, and gets only
+  # that key. Promptfoo's cloud generation, sharing and telemetry are off: attacks are
+  # generated and graded with our key. Afterwards: docker compose --profile tools down
+  redteam:
+    build: ./redteam
+    profiles: ["tools"]
+    depends_on:
+      redteam-api: { condition: service_healthy }
+    entrypoint: ["sh", "run.sh"]
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION: "true"
+      PROMPTFOO_DISABLE_REMOTE_GENERATION: "true"
+      PROMPTFOO_DISABLE_SHARING: "1"
+      PROMPTFOO_DISABLE_TELEMETRY: "1"
+      PROMPTFOO_DISABLE_UPDATE: "1"
+    volumes:
+      - ./redteam/results:/app/results
+
 volumes:
   audit-data:

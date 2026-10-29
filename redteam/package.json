@@ -1,0 +1,8 @@
+{
+  "name": "assistant-redteam",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "promptfoo": "0.124.1"
+  }
+}

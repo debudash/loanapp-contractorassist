@@ -21,6 +21,16 @@ export interface Deps {
 }
 
 export const DEFAULT_LIMITS = { perHour: 30, perDay: 200 };
+
+/**
+ * Limits from RATE_LIMIT_PER_HOUR and RATE_LIMIT_PER_DAY, for a test instance such as the red-team
+ * run's; anything missing or not a positive whole number keeps the default.
+ */
+export function limitsFromEnv(env: Record<string, string | undefined>): NonNullable<Deps["limits"]> {
+  const read = (value: string | undefined, fallback: number) =>
+    value !== undefined && /^[1-9]\d*$/.test(value) ? Number(value) : fallback;
+  return { perHour: read(env.RATE_LIMIT_PER_HOUR, DEFAULT_LIMITS.perHour), perDay: read(env.RATE_LIMIT_PER_DAY, DEFAULT_LIMITS.perDay) };
+}
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_NAME_LENGTH = 100;
 const HOUR_MS = 3_600_000;
