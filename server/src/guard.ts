@@ -68,6 +68,13 @@ function numberFidelity(text: string, screen: Screen): Failure[] {
       failures.push({ rule: "G-1", reason: "placeholder not on this screen", quote: placeholder });
     }
   }
+  // ISS-3: rounded figures already read "about $24,000", so "about {{x.rounded}}" rendered
+  // "about about $24,000". The draft is rejected so the retry drops the extra word.
+  for (const { placeholder, name } of placeholdersIn(text)) {
+    if (!name.endsWith(".rounded")) continue;
+    const doubled = new RegExp(`\\babout\\s+${placeholder.replace(/[.{}]/g, "\\$&")}`, "i").exec(text);
+    if (doubled) failures.push({ rule: "G-1", reason: "rounded figure already says 'about'", quote: doubled[0] });
+  }
   const prose = withoutPlaceholders(text);
   // Any brace left once well-formed placeholders are removed would show on screen.
   for (const quote of prose.match(/[{}]+/g) ?? []) {

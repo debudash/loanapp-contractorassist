@@ -62,6 +62,13 @@ describe("guard", () => {
       ]);
     });
 
+    // ISS-3: found by the first live eval run; "about {{diff.total.rounded}}" rendered "about about $24,000".
+    it("fails a rounded figure the model prefixed with 'about', which the figure already says", () => {
+      expect(guard(say("It costs About  {{diff.total.rounded}} more."), screen).failures).toEqual([
+        { rule: "G-1", reason: "rounded figure already says 'about'", quote: "About  {{diff.total.rounded}}" },
+      ]);
+    });
+
     // Review fix (slice 2, spec S2): found by spec review; malformed placeholders showed raw braces.
     it.each([
       "{{ lowest_monthly.monthly }}",

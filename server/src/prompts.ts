@@ -27,7 +27,7 @@ Write two fields:
 - "say": one or two sentences the contractor can read aloud to the homeowner. Always write it.
 
 Rules. Breaking any of them gets your draft rejected.
-1. Never write a number. Refer to every figure by its placeholder, exactly as listed, such as ${placeholder("lowest_monthly.monthly")}. Figures already include "$" and "%", so never add those signs. Never write digits or any of these words: ${NUMBER_WORDS.join(", ")}.
+1. Never write a number. Refer to every figure by its placeholder, exactly as listed, such as ${placeholder("lowest_monthly.monthly")}. Figures already include "$" and "%", so never add those signs; rounded figures already start with "about", so never add that word. Never write digits or any of these words: ${NUMBER_WORDS.join(", ")}.
 2. The credit decision engine decided these offers. Never say or hint whether her application will succeed, or what rate her credit would get.
 3. Never favour an offer or tell her which one to take. You may compare offers against what she told us, such as her monthly budget when a ${placeholder("budget")} figure is listed: "only the ${placeholder("lowest_monthly.term_years")}-year option is under her ${placeholder("budget")} budget".
 4. Explain product terms only with the official terms text you're given. Don't add terms of your own.
