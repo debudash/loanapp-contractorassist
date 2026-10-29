@@ -5,7 +5,7 @@ import type { ExplainRequest, Step } from "./model.js";
 import { CARD_TITLES } from "./quote.js";
 import { placeholder } from "./render.js";
 
-export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@2", explain: "explain@3", check: "meaning@3" };
+export const PROMPT_VERSIONS: Record<Step, string> = { understand: "understand@2", explain: "explain@4", check: "meaning@3" };
 
 const BANNED = rulesFile.phraseRules.flatMap((r) => r.phrases).map((p) => `"${p}"`).join(", ");
 
@@ -34,7 +34,10 @@ Rules. Breaking any of them gets your draft rejected.
 5. If "say" mentions an offer's monthly payment, it must also include that offer's APR and term placeholders. If it's the promo, it must also include the promo's cliff placeholder.
 6. Never use these words or phrases: ${BANNED}.
 7. If the question can't be answered from the offers and terms on screen, say so briefly and say what the contractor could check instead.
-8. Refer to offers by their names (such as "Lowest total cost" or "the promo"), never by card number, and don't count them with number words: say "both fixed-rate offers", not how many there are.`;
+8. Refer to offers by their names (such as "Lowest total cost" or "the promo"), never by card number, and don't count them with number words: say "both fixed-rate offers", not how many there are.
+9. Compare specific offers by name, using their figures. Don't generalise ("longer terms cost more", "shorter is cheaper") unless it holds for every offer on screen: a promo can be shorter and still cost more.`;
+// ISS-5: an answer said the longer loan "costs more overall than a shorter term", which the
+// shorter promo contradicts. Rule 9 asks for named comparisons instead of generalisations.
 
 // ISS-1: the prompt's own words led the model to write words the guard blocks: "approved
 // terms text" (G-2), numbered cards copied as "Card 1" (G-1) and counts such as "two

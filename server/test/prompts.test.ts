@@ -34,6 +34,12 @@ describe("explain prompt", () => {
   it("tells the model to name offers instead of numbering or counting them", () => {
     expect(EXPLAIN_SYSTEM).toContain("Refer to offers by their names");
   });
+
+  // ISS-5: found by the first live eval run; "costs more overall than a shorter term" wasn't
+  // true of the shorter promo, which costs more.
+  it("tells the model to compare named offers, not to generalise about terms", () => {
+    expect(EXPLAIN_SYSTEM).toContain("Compare specific offers by name");
+  });
 });
 
 describe("meaning check prompt", () => {
