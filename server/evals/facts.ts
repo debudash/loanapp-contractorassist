@@ -11,7 +11,10 @@ export function screenFacts(cards: Card[], figures: Figures, termsTexts: string[
     const own = Object.entries(figures)
       .filter(([name]) => name.startsWith(`${card.label}.`) && !name.endsWith(".rounded"))
       .map(([name, value]) => `${figureMeaning(name)} ${value}`);
-    return `- ${CARD_TITLES[card.label]}: ${own.join("; ")}`;
+    // The product type ties each offer to its official terms (found by eval run 3: without it
+    // the judge couldn't confirm "both fixed-rate offers have no early-payment penalty").
+    const type = card.kind === "fixed" ? "fixed rate" : "deferred-interest promo";
+    return `- ${CARD_TITLES[card.label]} (${type}): ${own.join("; ")}`;
   });
   return [
     offers.length ? `Offers:\n${offers.join("\n")}` : "No offers on screen.",

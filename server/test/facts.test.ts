@@ -41,3 +41,14 @@ describe("judge facts completeness", () => {
     expect(facts).toContain("new_figure $1.00");
   });
 });
+
+describe("judge facts: product type", () => {
+  // Found by eval run 3: the judge failed "both fixed-rate offers have no early-payment penalty"
+  // as unsupported because the facts never said which offers are fixed-rate.
+  it("says which offers are fixed-rate and which is the deferred-interest promo", () => {
+    const facts = screenFacts(cards, figures(cards, 300), []);
+
+    expect(facts).toContain("- Lowest total cost and lowest monthly (fixed rate):");
+    expect(facts).toContain("- Promo (deferred-interest promo):");
+  });
+});
