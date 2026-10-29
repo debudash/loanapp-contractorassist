@@ -42,6 +42,16 @@ describe("explain prompt", () => {
     expect(EXPLAIN_SYSTEM).toContain("Refer to offers by their names");
   });
 
+  // ISS-7: found by eval run 5; "$90.55 more" compared the promo using the Lowest total cost
+  // difference. Prompt check; run 6 is the regression evidence.
+  it("ISS-7: says what each figure means, and that a difference compares only the offers it names", () => {
+    const prompt = explainPrompt(request);
+
+    expect(prompt).toContain("{{diff.monthly}} = $90.55: how much more a month the lowest total cost offer is than the lowest monthly offer");
+    expect(prompt).toContain("{{promo.cliff}} = $4,409.69: deferred interest added if not paid off in time (the cliff)");
+    expect(EXPLAIN_SYSTEM).toContain("A difference figure compares only the offers its meaning names");
+  });
+
   // ISS-5: found by the first live eval run. Prompt check; run 2 is the regression evidence.
   it("ISS-5: tells the model to compare named offers, not to generalise about terms", () => {
     expect(EXPLAIN_SYSTEM).toContain("Compare specific offers by name");
