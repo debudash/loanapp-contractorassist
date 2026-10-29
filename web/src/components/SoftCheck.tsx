@@ -2,7 +2,7 @@ import { useState } from "react";
 import { fill } from "../format";
 
 // Demo stand-ins for a real application; the mock decision engine has one fixture per path.
-const TEST_PROFILES = [
+export const TEST_PROFILES = [
   ["moderate", "Moderate credit"],
   ["strong", "Strong credit"],
   ["no_offers", "No offers"],
@@ -15,13 +15,15 @@ interface Props {
   /** Compliance-owned wording: what to ask the homeowner, and the consent itself (its rules version is recorded). */
   askText: string;
   consentText: string;
+  /** The test credit profile; held by App, since a result belongs to the profile it was run for. */
+  profile: string;
+  onProfileChange: (profile: string) => void;
   onRun: (applicantRef: string) => void;
 }
 
 /** Step 3, FR-4: every soft check needs its own consent tick. It resets after each run and on a new quote. */
-export function SoftCheck({ disabled, homeowner, askText, consentText, onRun }: Props) {
+export function SoftCheck({ disabled, homeowner, askText, consentText, profile, onProfileChange, onRun }: Props) {
   const [consent, setConsent] = useState(false);
-  const [profile, setProfile] = useState<string>(TEST_PROFILES[0][0]);
   return (
     <section className="panel soft-check" aria-label="Soft check">
       <p>{fill(askText, { homeowner: homeowner || "the homeowner" })}</p>
@@ -47,7 +49,7 @@ export function SoftCheck({ disabled, homeowner, askText, consentText, onRun }: 
           <select
             value={profile}
             onChange={(e) => {
-              setProfile(e.target.value);
+              onProfileChange(e.target.value);
               setConsent(false);
             }}
           >
