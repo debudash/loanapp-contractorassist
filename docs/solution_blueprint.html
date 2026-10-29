@@ -167,6 +167,22 @@ pre { margin: 0; background: var(--code-bg); border-radius: 10px; padding: 14px 
 tr.flag td { background: var(--warn-soft); }
 footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--line); padding-top: 16px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* Print (docs/solution_blueprint.pdf): no on-screen controls; keep cards, steps and table rows whole. */
+@media print {
+  /* Chrome splits grid layouts badly across pages, so print uses plain blocks. */
+  main, section { display: block; }
+  main { padding-block: 0; }
+  section + section { margin-top: 36px; }
+  section > * + * { margin-top: 16px; }
+  pre.mermaid svg { display: block; width: auto !important; max-width: 100%; max-height: 8.5in; height: auto; margin: 0 auto; }
+  pre.mermaid { break-inside: avoid; }
+  .panel-toggle { display: none; }
+  .scroll { overflow: visible; }
+  th, td { white-space: normal; }
+  pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .person, .offer, .stage, .tier, .step, .versus > div, .layer, .panel, tr, pre { break-inside: avoid; }
+  .eyebrow, h2, h3 { break-after: avoid; }
+}
 </style>
 
 <main>
@@ -697,6 +713,13 @@ docker-compose.yml    api + web; test, web-test and evals on demand</pre>
 
 </main>
 
+<script type="module">
+  // Draws the data-model diagram; without it the page shows the diagram's source text.
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: false, theme: "neutral", er: { useMaxWidth: true } });
+  await mermaid.run({ querySelector: "pre.mermaid" });
+  document.documentElement.dataset.diagrams = "ready";
+</script>
 <script>
   const btn = document.getElementById('toggle');
   const panel = document.getElementById('assist');
