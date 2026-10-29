@@ -49,7 +49,7 @@ Open **http://localhost:5180**.
 
 Without an API key the app still works: ballpark, soft check and offer cards are pure code. The assistant answers "unavailable", which is the designed behaviour when the model can't be reached.
 
-### A two-minute demo
+### Demo walkthrough
 
 The screen is four numbered steps, and the line under the quote bar says what to do next.
 
