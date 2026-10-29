@@ -56,7 +56,7 @@ The screen is four numbered steps, and the line under the quote bar says what to
 1. **Project:** type the homeowner's name.
 2. **Ballpark estimates:** payment ranges for $30,000 against a $300 budget are already showing. No AI involved.
 3. **Real offers:** keep "Moderate credit" as the credit mock profile, tick the consent box and **Run soft check**.
-4. **Offers:** three cards appear: lowest total cost, lowest monthly, promo, each with full disclosures; the promo shows its $4,409.69 cliff.
+4. **Offers:** three cards appear: lowest total cost, lowest monthly, promo, each with full disclosures; the promo shows the $4,409.69 of deferred interest it can add.
 
 Then open the assistant (right-hand column). Tap a suggested prompt, or ask "Is the promo basically free?", "She's got a 780 score, she'll get approved right?", or "drop it to $25K, she can do 250" (then tap **Apply** in step 1).
 
@@ -105,7 +105,9 @@ server/
   src/app.ts             HTTP routes and rate limit
   src/ports.ts, mocks/   production interfaces; mock loan catalog and credit decision engine
   evals/                 eval cases, graders, Opus 5.5 judges
-docs/      PRD, design, architecture, data model, roadmap, evals, issue log, AI log
+redteam/   Promptfoo red team: attacks written and graded by Claude against our own rules
+docs/      PRD, design, solution blueprint (PDF and HTML), architecture, data model, roadmap,
+           evals and saved eval runs, issue log, AI log
 ```
 
 Architecture and sequence diagrams: [docs/architecture.md](docs/architecture.md). Tables: [docs/data-model.md](docs/data-model.md).
@@ -124,4 +126,4 @@ Each prototype piece has a production counterpart on the company's AWS stack:
 
 ## AI usage
 
-Built with Claude Code. How AI was used, and every decision the AI made itself, is in [docs/AI_LOG.md](docs/AI_LOG.md). Each slice was reviewed by two AI reviewers (coding standards, and against the PRD); the findings and fixes are in the merge requests.
+Built with Claude Code. How AI was used, and every decision the AI made itself, is in [docs/AI_LOG.md](docs/AI_LOG.md). Each slice was reviewed by two AI reviewers (coding standards, and against the PRD); small follow-up changes got one review. The findings and fixes are in the merge requests.
