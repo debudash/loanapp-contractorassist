@@ -119,6 +119,8 @@ describe("POST /api/assist", () => {
     expect(res.status).toBe(429);
     expect(res.body).toEqual({ error: "rate_limited", message: "The assistant has reached today's limit for this demo. The cards and figures still work." });
     expect(model.understandCalls).toHaveLength(1);
+    const refused = (await request(app).get(`/api/sessions/${other}/audit`).set(asValley)).body.turns;
+    expect(refused.map((t: { outcome: string }) => t.outcome)).toEqual(["rate_limited"]);
   });
 
   // Review fix (slice 5, spec S1): found by spec review; parallel questions all passed the check.
@@ -186,13 +188,13 @@ describe("POST /api/assist", () => {
     expect(DEFAULT_LIMITS).toEqual({ perHour: 30, perDay: 200 });
   });
 
-  // The red-team run uses its own API instance, which needs more questions than a contractor gets.
   it("reads a cap across all contractors from the environment, with none by default", () => {
     expect(limitsFromEnv({}).allPerDay).toBeUndefined();
     expect(limitsFromEnv({ RATE_LIMIT_ALL_PER_DAY: "300" }).allPerDay).toBe(300);
     expect(limitsFromEnv({ RATE_LIMIT_ALL_PER_DAY: "none" }).allPerDay).toBeUndefined();
   });
 
+  // The red-team run uses its own API instance, which needs more questions than a contractor gets.
   it("reads limits from the environment, keeping the defaults for anything missing or invalid", () => {
     expect(limitsFromEnv({})).toEqual(DEFAULT_LIMITS);
     expect(limitsFromEnv({ RATE_LIMIT_PER_HOUR: "1000", RATE_LIMIT_PER_DAY: "5000" })).toEqual({ perHour: 1000, perDay: 5000 });

@@ -1,7 +1,7 @@
 // HTTP routes. Thin: each one checks identity and input, calls the quote engine
 // or an adapter, records what happened, and returns the result.
 import { randomUUID } from "node:crypto";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import express, { type Request, type Response } from "express";
 import { type AssistDeps, assist } from "./assist.js";
 import type { AuditStore } from "./audit.js";
@@ -31,12 +31,11 @@ export const DEFAULT_LIMITS = { perHour: 30, perDay: 200 };
  * caps questions across all contractors (the public deployment); without it there is no such cap.
  */
 export function limitsFromEnv(env: Record<string, string | undefined>): NonNullable<Deps["limits"]> {
-  const read = (value: string | undefined, fallback?: number) =>
-    value !== undefined && /^[1-9]\d*$/.test(value) ? Number(value) : fallback;
-  const allPerDay = read(env.RATE_LIMIT_ALL_PER_DAY);
+  const whole = (value: string | undefined) => (value !== undefined && /^[1-9]\d*$/.test(value) ? Number(value) : undefined);
+  const allPerDay = whole(env.RATE_LIMIT_ALL_PER_DAY);
   return {
-    perHour: read(env.RATE_LIMIT_PER_HOUR, DEFAULT_LIMITS.perHour)!,
-    perDay: read(env.RATE_LIMIT_PER_DAY, DEFAULT_LIMITS.perDay)!,
+    perHour: whole(env.RATE_LIMIT_PER_HOUR) ?? DEFAULT_LIMITS.perHour,
+    perDay: whole(env.RATE_LIMIT_PER_DAY) ?? DEFAULT_LIMITS.perDay,
     ...(allPerDay !== undefined && { allPerDay }),
   };
 }
@@ -215,9 +214,9 @@ export function createApp(deps: Deps) {
 
   // The public deployment serves the built web app too; any other page path gets index.html.
   if (deps.staticDir) {
-    const dir = deps.staticDir;
+    const dir = resolve(deps.staticDir);
     app.use(express.static(dir));
-    app.get(/^\/(?!api\/).*/, (_req, res) => res.sendFile(join(dir, "index.html")));
+    app.get(/^\/(?!api(?:\/|$)).*/, (_req, res) => res.sendFile(join(dir, "index.html")));
   }
 
   // Errors answer in JSON like the rest of the API, never Express's HTML page.

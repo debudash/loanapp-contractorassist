@@ -135,7 +135,7 @@ The root `Dockerfile` builds one image that serves the web app and the API from 
 
 ```bash
 fly apps create gl-loanappassist
-fly volumes create audit_data --region iad --size 1
+fly volumes create audit_data --region iad --size 1 -y
 grep '^ANTHROPIC_API_KEY=' .env | fly secrets import   # the key goes to Fly secrets, never into the image
 fly deploy --ha=false                                  # one machine: the SQLite volume belongs to one machine
 ```

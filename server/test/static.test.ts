@@ -37,6 +37,7 @@ describe("serving the web app", () => {
     const app = appServing(builtWeb());
 
     expect((await request(app).get("/api/unknown")).status).toBe(401); // contractor_required, not index.html
+    expect((await request(app).get("/api").set("x-contractor-id", "c_summit")).text).not.toContain("<title>app</title>");
     expect((await request(app).get("/health")).body).toEqual({ ok: true });
   });
 

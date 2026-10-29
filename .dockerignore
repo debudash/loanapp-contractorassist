@@ -1,5 +1,5 @@
 # Keeps secrets and local output out of the root image's build context (Dockerfile, fly.toml).
-.env
+**/.env*
 .git
 **/node_modules
 **/dist
