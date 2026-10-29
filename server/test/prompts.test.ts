@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import rules from "../src/compliance-rules.json" with { type: "json" };
 import { guard, NUMBER_WORDS } from "../src/guard.js";
 import { EXPLAIN_SYSTEM, explainPrompt, MEANING_CHECK_SYSTEM, meaningCheckPrompt, UNDERSTAND_SYSTEM } from "../src/prompts.js";
-import { FIGURE_MEANINGS, figures, presentOffers } from "../src/quote.js";
+import { FIGURE_MEANINGS, figureMeaning, figures, presentOffers } from "../src/quote.js";
 
 const cards = presentOffers(
   [
@@ -34,8 +34,12 @@ describe("explain prompt", () => {
       .replace(/"\$" and "%"/, "");
     const cardHeader = explainPrompt(request).split("\n\n")[0]!;
 
+    // MR 10 review: since ISS-7 the figure meanings are prompt text too.
+    const meanings = Object.keys(figures(cards, 300)).map(figureMeaning).join(". ");
+
     expect(guardedWords(listsRemoved)).toEqual([]);
     expect(guardedWords(cardHeader)).toEqual([]);
+    expect(guardedWords(meanings)).toEqual([]);
   });
 
   it("ISS-1: tells the model to name offers instead of numbering or counting them", () => {
