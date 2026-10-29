@@ -145,6 +145,20 @@ th { font: 600 0.75rem var(--font-body); letter-spacing: 0.06em; text-transform:
 .status { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
 .status .tier p { font-size: 0.88rem; color: var(--muted); }
 
+/* Thin on purpose: what you see, and what sits underneath */
+.layers { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.layer { padding: 16px 20px; display: grid; gap: 10px; }
+.layer.top { background: var(--surface); border-bottom: 2px dashed var(--line); }
+.layer.under { background: var(--brand-soft); }
+.layer h3 { font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.layer .seen { display: flex; flex-wrap: wrap; gap: 8px; }
+.layer ul { margin: 0; padding-left: 1.1em; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 6px 24px; }
+.cto { font: 600 1.15rem/1.45 var(--font-display); font-stretch: 100%; border-left: 3px solid var(--brand); padding-left: 16px; max-width: 60ch; }
+.cto cite { display: block; font: 400 0.85rem var(--font-body); color: var(--muted); font-style: normal; margin-top: 6px; }
+.run { display: flex; flex-wrap: wrap; gap: 8px; }
+.said-no td { white-space: normal; vertical-align: top; }
+.said-no td:first-child { font-weight: 600; width: 34%; }
+
 pre { margin: 0; background: var(--code-bg); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font: 0.82rem/1.55 var(--font-mono); }
 .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .two > * { min-width: 0; }
@@ -161,10 +175,42 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   <span class="eyebrow">Solution blueprint · On-site Financing Assistant</span>
   <h1><q>She can do $300 a month.</q><br>Can this roof fit that?</h1>
   <p class="lede">That's how financing starts in a kitchen. Homeowners think in monthly budgets, not loan products. The assistant answers the budget question in 30 seconds, using numbers that only come from code and disclosures attached to every payment.</p>
+  <p class="insight"><b>Built thin on purpose:</b> one question, answered end to end, by one service a small team can run.</p>
   <div class="facts">
     <div class="fact"><b>38%</b><span>of applications abandoned, mostly at product selection</span></div>
     <div class="fact"><b>22 min</b><span>average application, against a 10-minute benchmark</span></div>
     <div class="fact"><b>30 s</b><span>what the contractor needs for a believable payment</span></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Scope, on purpose</span>
+  <h2>Thin on the surface, deep where the risk is</h2>
+  <p class="cto">"We're a small engineering team. I need solutions we can actually operate. Don't give me a science project."<cite>CTO, in the brief</cite></p>
+  <p>A homeowner's loan question has one way to go badly wrong: a number, a promise or a hint of approval that isn't true. So the slice is narrow, from budget to offers, and the effort went into making that one path hard to get wrong and easy to prove. The hardest part of a regulated AI feature isn't the feature. It's making sure it can't say the wrong thing, and proving it didn't.</p>
+  <div class="layers">
+    <div class="layer top">
+      <h3>What you see</h3>
+      <div class="seen"><span class="chip no">4 guided steps</span><span class="chip no">3 offer cards</span><span class="chip no">1 chat panel</span><span class="chip no">1 compliance page</span></div>
+    </div>
+    <div class="layer under">
+      <h3>Underneath</h3>
+      <ul>
+        <li>Every figure computed in code; the model writes placeholders</li>
+        <li>A guard that rejects any number the model writes itself</li>
+        <li>A second model reading each draft for decisions and steering</li>
+        <li>One retry, then a standard explanation written in code</li>
+        <li>Credit questions answered in compliance's wording, never the model's</li>
+        <li>Every phrase list and fixed sentence in one file compliance owns</li>
+        <li>Every draft, check and answer recorded, append-only</li>
+        <li>42 eval cases, run twice, judged by a stronger model</li>
+        <li>120 red-team attacks: no answer broke a rule</li>
+        <li>Every bug found after merge logged, with a test written first</li>
+      </ul>
+    </div>
+  </div>
+  <div class="run" aria-label="What it takes to run">
+    <span class="tag real">One new service</span><span class="tag real">A few append-only tables</span><span class="tag real">One API key</span><span class="tag none">No vector store</span><span class="tag none">No GPU</span><span class="tag none">No training pipeline</span><span class="tag local">About 1¢ a question</span>
   </div>
 </section>
 
@@ -607,29 +653,23 @@ erDiagram
 </section>
 
 <section>
-  <span class="eyebrow">Scope</span>
-  <h2>What ships now, and what waits</h2>
-  <div class="two">
-    <div class="person">
-      <h3>Phase 0: this prototype</h3>
-      <ul>
-        <li>Four guided steps: budget-first ballpark and three offer cards</li>
-        <li>Consent (with the homeowner's name) and mocked soft check, three credit mock profiles</li>
-        <li>Assistant chat with guard and placeholders</li>
-        <li>Audit log and compliance page</li>
-        <li>Eval suite with grounding and safety judges</li>
-      </ul>
-    </div>
-    <div class="person">
-      <h3>Phase 2</h3>
-      <ul>
-        <li>Document extraction for pay stubs, estimates and scope letters</li>
-        <li>RAG over policy and product terms documents</li>
-        <li>Shareable homeowner summary to finish the decision at home</li>
-        <li>Fee transparency guard: cash price against amount financed</li>
-      </ul>
-    </div>
+  <span class="eyebrow">Scope decisions</span>
+  <h2>What we said no to, and why</h2>
+  <p>Each of these is worth doing. None of them helps the contractor in the kitchen today, and each adds something a small team has to run.</p>
+  <div class="scroll">
+    <table class="said-no">
+      <thead><tr><th>Tempting</th><th>Why not now</th></tr></thead>
+      <tbody>
+        <tr><td>An agent loop</td><td>A fixed path is easier to run, test and audit; an agent adds ways to fail</td></tr>
+        <tr><td>RAG</td><td>The catalog is structured data to look up; retrieval needs its own test set first (Phase 2, over policy documents)</td></tr>
+        <tr><td>Fine-tuning</td><td>Rates change with the catalog; versioned prompts are logged with every answer instead</td></tr>
+        <tr><td>Document extraction</td><td>Saves back-office time but doesn't help in the kitchen (Phase 2)</td></tr>
+        <tr><td>Income verification</td><td>A flow problem with Plaid more than an AI problem</td></tr>
+        <tr><td>A self-reported credit band</td><td>Would set expectations the lender may not meet; the soft check gives real offers</td></tr>
+      </tbody>
+    </table>
   </div>
+  <p class="muted">Also in Phase 2: a shareable homeowner summary to finish the decision at home, and a fee-transparency guard (cash price against amount financed).</p>
 </section>
 
 <section>
